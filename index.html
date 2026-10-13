@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rotas de Toronto · Laura e Derik 2026</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--ink:#14213d;--paper:#f6f1e7;--red:#c8102e;--gold:#e0a526;--line:#d9cfb9;--ok:#2d6a4f;--warn:#b45309;--sun:#fff3c4;--rain:#dbe8ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.45 system-ui,sans-serif}
+header{background:var(--ink);color:#fff;padding:24px 18px 16px;border-bottom:6px solid var(--red)}
+header h1{margin:0;font:700 27px Georgia,serif}
+header p{margin:6px 0 0;color:#d7dbe6;font-size:13px}
+nav{background:var(--ink);padding:10px 12px 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+nav .gl{grid-column:1/-1;color:#e0a526;font:700 11px system-ui;letter-spacing:.06em;text-transform:uppercase;margin:4px 2px 0}
+nav button{color:#fff;border:0;cursor:pointer;font:600 13px system-ui;background:#27375f;padding:10px 8px;border-radius:12px;text-align:left;line-height:1.2;min-height:42px}
+nav button:hover{background:#3a4f85}nav button.on{background:var(--red)}
+#menuFab{position:fixed;right:14px;bottom:16px;z-index:1000;background:var(--red);color:#fff;border:2px solid #fff;border-radius:26px;padding:11px 16px;font:700 14px system-ui;box-shadow:0 3px 10px #0007;cursor:pointer}
+@media(max-width:620px){nav{grid-template-columns:1fr 1fr}nav button{font-size:13.5px}header h1{font-size:22px}main{padding:6px 10px 90px}}
+.pane{display:none}.pane.on{display:block}
+main{max-width:1040px;margin:0 auto;padding:6px 14px 80px}
+h2{font:700 24px Georgia,serif;margin:38px 0 4px;border-bottom:3px solid var(--red);padding-bottom:4px}
+h2 small{display:block;font:13px system-ui;color:#666;font-weight:400}
+.box{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0}
+.warn{background:#fff7e0;border-left:5px solid var(--gold)}
+.good{background:#eaf5ee;border-left:5px solid var(--ok)}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:10px 0}
+.wh{font:700 11px system-ui;text-align:center;color:#666}
+.d{border-radius:10px;padding:6px 5px;min-height:108px;border:1px solid var(--line);background:#fff;font-size:11px;display:flex;flex-direction:column;gap:2px}
+.d b{font-size:13px}.d .e{font-size:22px;line-height:1}.d .t{font-weight:700;font-size:12px}.d .p{font-size:10.5px;line-height:1.2}
+.d.sun{background:var(--sun)}.d.rain{background:var(--rain)}.d.cloud{background:#eceef2}.d.fix{outline:3px solid var(--red)}.d.off{opacity:.3;min-height:20px;cursor:default}.d.work{opacity:.75}
+.route{margin:26px 0}
+.rh{display:flex;align-items:center;gap:12px;background:var(--ink);color:#fff;border-radius:14px 14px 0 0;padding:12px 16px}
+.rh .ico{font-size:34px}.rh h3{margin:0;font:700 21px Georgia,serif}.rh p{margin:2px 0 0;font-size:12.5px;color:#d7dbe6}
+.badge{margin-left:auto;font:700 11px system-ui;background:var(--gold);color:#3a2a00;border-radius:12px;padding:3px 10px;white-space:nowrap}
+.badge.r{background:#9ec1ff;color:#0a2a5c}.badge.f{background:var(--red);color:#fff}
+.rb{background:#fff;border:1px solid var(--line);border-top:0;border-radius:0 0 14px 14px;padding:12px}
+.how{background:#eef3fb;border:1px solid #c7d6ee;border-radius:10px;padding:10px 12px;margin:8px 0;font-size:13.5px}
+.how ol{margin:6px 0 0;padding-left:20px}.how li{margin:3px 0}
+.legs{border:1px solid var(--line);border-radius:10px;margin:8px 0;overflow:hidden}
+.legs .lt{background:#efe7d4;font:700 13px system-ui;padding:7px 11px}
+.leg{display:flex;align-items:center;gap:10px;padding:7px 11px;border-top:1px solid var(--line);font-size:13px}
+.leg .ic{font-size:20px}.leg .tx{flex:1}.leg small{color:#666;display:block}
+.leg a{background:var(--red);color:#fff;text-decoration:none;font:700 12px system-ui;padding:6px 12px;border-radius:16px;white-space:nowrap}
+.leg.tr a{background:var(--ok)}.leg.dr a{background:var(--ink)}
+.tabs{display:flex;gap:6px;margin:10px 0 0}
+.tabs button{font:700 12px system-ui;border:1px solid var(--ink);background:#fff;color:var(--ink);padding:6px 12px;border-radius:14px;cursor:pointer}
+.tabs button.on{background:var(--ink);color:#fff}
+.mapbox{margin:6px 0 10px;border:2px solid var(--ink);border-radius:12px;overflow:hidden;background:#f3ead2}
+.mapbox svg{display:block;width:100%;height:auto}
+.lmap{height:480px;width:100%}
+.compass{background:#fff;border:2px solid #14213d;border-radius:10px;padding:4px 8px;font:700 12px system-ui;text-align:center;line-height:1.1}
+.mapmsg{display:none;padding:10px 14px;background:#fff7e0;font-size:13px}
+.mapmsg{display:none;padding:10px 14px;background:#fff7e0;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;margin:8px 0}
+.tile{border:1px solid var(--line);border-radius:12px;background:#fffdf8;overflow:hidden;display:flex;flex-direction:column}
+.ph{position:relative;height:150px;background:linear-gradient(135deg,#14213d,#27375f);display:flex;align-items:center;justify-content:center;font-size:54px}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ph .num{position:absolute;top:8px;left:8px;background:var(--red);color:#fff;font:700 13px system-ui;border-radius:50%;min-width:26px;height:26px;padding:0 5px;display:flex;align-items:center;justify-content:center;z-index:2;border:2px solid #fff}
+.ph .num.o{background:#6b7280}
+.ph .fac{position:absolute;bottom:6px;right:6px;z-index:2;background:rgba(20,33,61,.85);color:#fff;font:600 11px system-ui;padding:2px 8px;border-radius:10px}
+.tb{padding:9px 11px;flex:1;display:flex;flex-direction:column}
+.tb .n{font:700 15px Georgia,serif}
+.tb .h{font:700 12px system-ui;color:var(--red);margin-top:3px}
+.tb .dd{font-size:12.5px;margin:4px 0}
+.tb .lg{font-size:12px;background:#eef3fb;border-radius:8px;padding:4px 7px;margin:4px 0}
+.tb .b{display:flex;gap:5px;flex-wrap:wrap;margin-top:auto;padding-top:6px}
+.tb .b a{font:600 11.5px system-ui;text-decoration:none;background:var(--ink);color:#fff;padding:4px 9px;border-radius:12px}
+.tb .b a.ph2{background:var(--red)}.tb .b a.ex{background:#4b5d86}.tb .b a.tr{background:var(--ok)}
+.tile.alert{border-color:var(--warn);background:#fff4e8}.tile.no{background:#f2eaea;border-color:#c9a0a0}.tile.opt{border-style:dashed}
+.tips{margin:8px 0 0;padding-left:18px;font-size:13px}
+table{width:100%;border-collapse:collapse;background:#fff;font-size:13px}
+td,th{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:#efe7d4}
+a{color:var(--red)}
+.foot{font-size:12px;color:#666;margin-top:40px}
+@media(max-width:620px){.d{min-height:90px;font-size:10px}.d .e{font-size:18px}.leg{flex-wrap:wrap}}
+
+.d{cursor:pointer;position:relative}.d .pi{font-size:15px;line-height:1}.d .p{font-size:10.5px;line-height:1.2}.d .ev{font:700 10px system-ui;color:#c8102e}
+.d.sel{outline:3px solid #14213d;box-shadow:0 2px 8px #0004}
+.dd2 h3{margin:0 0 6px;font:700 18px Georgia,serif}.dd2 p{margin:6px 0}.dd2 ul{margin:4px 0 0;padding-left:18px;font-size:13.5px}
+.fixtag{background:#c8102e;color:#fff;font:700 10px system-ui;padding:2px 7px;border-radius:9px}
+.jump{background:#14213d;color:#fff;border:0;border-radius:12px;padding:9px 12px;font:600 13px system-ui;cursor:pointer;text-align:left}.jump.alt{background:#4b5d86}
+@media(max-width:620px){.wk{gap:3px}.d{min-height:74px;padding:4px 3px}.d .p{display:none}.d .pi{font-size:17px}.d b{font-size:12px}.d .t{font-size:10.5px}.d .e{font-size:16px}}
+</style>
+</head>
+<body>
+<header>
+<h1>🗺️ Rotas de Toronto · Laura e Derik</h1>
+<p>31/out a 30/nov/2026 · rotas saem do Airbnb · transporte público e a pé em botões separados · pesquisado em 12/out/2026</p>
+</header>
+<nav id="nav"></nav>
+<main>
+<section class="pane" id="p-clima">
+<h2 id="clima">☁️ Previsão do tempo (AccuWeather)<small>Lida em 12/out. Se chover no dia marcado, troca com um dia indoor.</small></h2>
+<div class="wk" id="cal"></div>
+<div id="dayd"></div>
+<div class="box warn">📅 Toque em um dia para ver o plano, o plano B se chover, a roupa e os eventos. A borda vermelha marca os dias fixos. Previsão do AccuWeather lida em 12/out: confira de novo perto do dia.</div>
+
+<div class="box good"><b>🧭 Como usar os botões de rota</b><br>Cada rota tem botões separados: 🚇 <b>transporte público</b> (casa até a primeira parada, e volta), 🚶 <b>a pé</b> (entre as paradas, em ordem) e 🚗 <b>carro</b> quando precisar. Assim o Google Maps mostra a opção certa em cada trecho. Os números dos cards são a ordem lógica, de um lado para o outro, sem voltar atrás. Paradas cinza e pontilhadas são opcionais e não entram nos botões.</div>
+
+</section>
+
+<div id="routes"></div>
+
+<p class="foot">⚠️ = estimativa ou fonte secundária. O botão 📍 Maps de cada card é a posição que vale. O mapa ilustrado é esquemático. Fotos vêm da Wikipédia e do seu board do Pinterest e carregam com internet.</p>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const HOME={addr:'79 Ford St, Toronto, ON M6N 3A2, Canada',ll:[43.6727,-79.4623]};
+const enc=encodeURIComponent;
+const MQ=q=>'https://www.google.com/maps/search/?api=1&query='+enc(q);
+const FQ=q=>'https://www.google.com/search?tbm=isch&q='+enc(q);
+const DQ=(q,mode)=>'https://www.google.com/maps/dir/?api=1&origin='+enc(HOME.addr)+'&destination='+enc(q)+'&travelmode='+(mode||'transit');
+const TIM=ll=>'https://www.google.com/maps/search/Tim+Hortons/@'+ll[0]+','+ll[1]+',16z';
+const MODE={transit:'!3e3',driving:'!3e0',walking:'!3e2'};
+const PIN=h=>'https://i.pinimg.com/736x/'+h+'.jpg';
+const MIC={transit:'🚇',driving:'🚗',walking:'🚶'};
+
+// ---------- CLIMA ----------
+const W={31:['⛅','sun',11,6,'🏠 Bairro (fixo)',1],1:['⛅','sun',9,5,'🎢 Wonderland (fixo)',1],2:['⛅','sun',13,7,'💻 trabalho'],3:['⛅','sun',14,7,'💻 (🏒 Leafs opc.)'],4:['☁️','cloud',14,1,'💻 trabalho'],5:['⛅','sun',7,0,'💻 trabalho'],6:['⛅','sun',6,5,'💻 trabalho'],7:['⛅','sun',12,4,'🏙️ Centro'],8:['⛅','sun',10,4,'🌳 Leste / Riverdale'],9:['⛅','sun',8,4,'💻 trabalho'],10:['⛅','sun',9,3,'💻 trabalho'],11:['☁️','cloud',6,1,'💻 trabalho'],12:['⛅','sun',5,1,'💻 trabalho'],13:['⛅','sun',6,2,'💻 pegar carro'],14:['☁️','cloud',10,5,'🌊 Niágara + luzes'],15:['🌧️','rain',11,6,'☔ Casa Loma + ROM'],16:['☁️','cloud',11,5,'💻 trabalho'],17:['⛅','sun',10,5,'💻 trabalho'],18:['⛅','sun',10,4,'💻 trabalho'],19:['⛅','sun',10,5,'💻 trabalho'],20:['⛅','sun',10,1,'💻 trabalho'],21:['🌧️','rain',8,3,'☔ Marlies + indoor'],22:['🌧️','rain',6,1,'🎅 Parade ⚠️'],23:['⛅','sun',5,-3,'💻 (inglês 18:45)'],24:['⛅','sun',5,-1,'💻 trabalho'],25:['⛅','sun',5,-2,'💻 trabalho'],26:['⛅','sun',6,-1,'💻 trabalho'],27:['☀️','sun',7,-1,'🛍️ Black Friday'],28:['☀️','sun',8,2,'🛍️ Compras + Cavalcade ⚠️'],29:['⛅','sun',8,2,'🦌 High Park'],30:['🌧️','rain',9,1,'✈️ voo 07:50']};
+
+// ---------- HELPERS ----------
+// S(icone, nome, horario, busca_no_maps, descricao, opcoes)
+// opcoes: k=chave, rq=endereco para rota (se faltar usa q), opt=opcional (nao entra na rota), ll, img, wiki, p, x, leg, no, alert, tim, noTr
+function S(i,n,h,q,d,o){return Object.assign({i,n,h,q,d},o||{});}
+const T='parada <b>Old Weston Rd at St Clair Ave W</b> ⚠️ (~7 min a pé de casa)';
+const BASE=`Saia de casa e caminhe ~7 min até a ${T}. Ali passam o <b>bonde 512 St Clair</b> (sentido <b>Eastbound</b>, leste, até a estação St Clair West, ~20 min) e o <b>ônibus 41 Keele</b> (sentido <b>Southbound</b>, sul, até a estação Keele, ~12 min).`;
+// legs: {m:modo, t:titulo, f:origem('home' ou chave), v:[chaves no meio], to:destino('home' ou chave), n:nota}
+
+const R=[
+/* ===== BAIRRO ===== */
+{id:'bairro',ico:'🏠',t:'Rota Bairro · chegada',w:'Sáb 31/out · a pé · pôr do sol ~17:35',b:'FIXO',bc:'f',
+intro:'O Airbnb fica na zona da St Clair Ave W (Earlscourt/Carleton Village), não no Junction. Mercado, restaurante brasileiro, academia, Best Buy e Tim Hortons ficam todos na St Clair. Ordem em 2 partes, sem voltar atrás: <b>Parte 1 a leste</b> (de dia) e <b>Parte 2 a oeste</b> (fim de tarde e noite).',
+how:[`Tudo a pé. Parte 1 ~2h. Parte 2 ~2h com jantar e mercado.`,`Metrô: nenhuma estação é perto (Dundas West e Keele a ~20 a 25 min a pé ⚠️). Para metrô use a ${T}.`,`Seu mapa original (14 min de carro, 55 min a pé) foi reordenado: antes ia e voltava entre leste e oeste.`],
+decision:`<b>Qual lógica?</b> A) mercado primeiro: geladeira cheia, mas cansa e dá muita sacola. B) casa primeiro e mercado no fim: conhece o caminho, mas escurece 17:35. <b>C (recomendada): Parte 1 de dia com tour leve, Parte 2 à noite com jantar e mercado grande por último</b> (perecíveis por último, volta de Uber com sacolas).`,
+legs:[{m:'walking',t:'Parte 1 · leste (Távora → Samba → WOLF → Tim → Earlscourt)',f:'home',v:['tavora','samba','wolf','tim'],to:'earls',n:'Depois volte para casa a pé (~12 min).'},{m:'walking',t:'Parte 2 · oeste (Sabor Carioca → Shoppers → Best Buy → Walmart)',f:'home',v:['sabor','shoppers','bestbuy'],to:'walmart',n:'Volte de Uber com as sacolas.'}],
+stops:[
+S('🥖','Távora Foods (mercado português)','15:45','Távora Foods, 1625 St Clair Ave W, Toronto','Pão, queijos, doces e frios portugueses. Seg a sex 8h às 19:30 ⚠️. A parada mais perto de casa (~3 min).',{k:'tavora',ll:[43.6754,-79.4605],p:'Tavora Foods St Clair Toronto'}),
+S('🥟','Samba Brazil Eatery (olhar)','16:05','Samba Brazil Eatery, 1646 St Clair Ave W, Toronto, ON','Pastéis e street food brasileira (pastel de carne seca ~C$7, preço antigo ⚠️). Horário não achei.',{k:'samba',rq:'Samba Brazil Eatery, 1646 St Clair Ave W, Toronto, ON',ll:[43.6766,-79.4572],leg:'🚶 ~5 min a pé'}),
+S('🥊','WOLF Athletic Academy (Derik)','16:25','WOLF Athletic Academy, 1287 St Clair Ave W, Toronto','Muay Thai e Jiu-Jitsu (boxe não está na grade). Trial 2 semanas C$99, BJJ avulso C$25. Muay Thai seg 19h, ter 19h, qua 17:30 e 19h, qui 19h, sex 19h, sáb 11h. Sem aula domingo. Tel 416-841-2667. Outra: Junction Academy BJJ, 417 Keele St.',{k:'wolf',ll:[43.6810,-79.4440],p:'WOLF Athletic Academy Toronto muay thai',x:[['Site','https://wolfacademy.ca/'],['Junction BJJ',MQ('Junction Academy BJJ 417 Keele St Toronto')]],leg:'🚶 ~15 min a pé ⚠️'}),
+S('☕','Tim Hortons (1176 St Clair W)','16:55','Tim Hortons, 1176 St Clair Ave W, Toronto','Primeiro "double double" e Timbits. É o mais perto que achei ⚠️, o botão ☕ mostra os mais próximos.',{k:'tim',tim:true,leg:'🚶 ~3 min a pé'}),
+S('🌳','Earlscourt Park','17:15','Earlscourt Park, 1200 Lansdowne Ave, Toronto','Parque do bairro: bordos e carvalhos, restos de cor até ~5/nov ⚠️. Prospect Cemetery (1450 St Clair W) fica por perto. Daqui volte para casa (~12 min).',{k:'earls',ll:[43.6707,-79.4470],wiki:'Earlscourt Park',leg:'🚶 ~10 min a pé'}),
+S('🍖','Jantar brasileiro: Sabor Carioca','18:00','Sabor Carioca, 1702 St Clair Ave W, Toronto','Feijoada, picanha, coxinha, pão de queijo (o antigo Sabor Brasil, até ~C$30). Horário atual não achei: ligue antes. Daqui você segue para oeste.',{k:'sabor',ll:[43.6757,-79.4660],p:'Sabor Carioca Toronto restaurante brasileiro',leg:'🚶 ~10 min de casa'}),
+S('🧴','Shoppers Drug Mart','19:15','Shoppers Drug Mart, 620 Keele St, Toronto','Farmácia e básicos. Sáb 9h às 22h, dom 9h às 18h ⚠️.',{k:'shoppers',ll:[43.6718,-79.4692],p:'Shoppers Drug Mart Keele St Toronto',leg:'🚶 ~15 min a pé'}),
+S('💻','Best Buy (Stockyards)','19:40','Best Buy, 10 Old Stock Yards Rd, Toronto','Dê uma olhada em tablets e óculos. Black Friday é 27/nov.',{k:'bestbuy',ll:[43.6694,-79.4744],p:'Best Buy Stockyards Toronto',leg:'🚶 ~5 min a pé'}),
+S('🛒','Mercado grande: Walmart Stockyards','20:00','Walmart Supercentre, 2525 St Clair Ave W, Toronto','Em 2024 o Walmart ficou mais barato que Food Basics (C$63) e No Frills (C$68) numa cesta de 11 itens. Walmart 7h às 23h. Alternativas: Food Basics 830 Lansdowne Ave (8h às 21h ⚠️) e No Frills 222 Lansdowne Ave ⚠️. Volte de Uber com as sacolas.',{k:'walmart',ll:[43.6745,-79.4745],wiki:'Walmart Canada',x:[['Food Basics',MQ('Food Basics, 830 Lansdowne Ave, Toronto')],['No Frills',MQ('No Frills, 222 Lansdowne Ave, Toronto')]],leg:'🚶 ~20 min ou 🚗 Uber ~5 min'}),
+S('📚','Biblioteca Junction Triangle','outro dia','Toronto Public Library Junction Triangle, 305 Campbell Ave, Toronto','Abriu em ago/2025. Seg 10h às 20:30, sáb 9h às 17h, dom 12h às 17h ⚠️. Confira se não está em reparo.',{opt:true,ll:[43.6606,-79.4455],wiki:'Toronto Public Library',x:[['Dufferin/St Clair',MQ('Toronto Public Library Dufferin St Clair, 1625 Dufferin St, Toronto')]]})
+],
+tips:['O relógio volta 1h na madrugada de domingo 1/nov.','Domingo muitas lojas fecham mais cedo (Shoppers 18h).','Halloween: crianças fazem trick-or-treat no bairro à noite.']},
+
+/* ===== WONDERLAND ===== */
+{id:'wonder',ico:'🎢',t:"Rota Canada's Wonderland",w:'Dom 1/nov · carro alugado · FIXO',b:'FIXO',bc:'f',
+intro:'Último dia do Halloween Haunt. Previsão 9°/5°. Haunt começa 18h. Você ganha 1h extra pelo fim do horário de verão. Os brinquedos estão na ordem do caminho que o Google desenha dentro do parque: de um extremo ao outro, sem voltar.',
+how:[`Casa → Avis High Park (3193 Dundas St W): Uber (~15 min ⚠️) ou transporte público (botão abaixo). Retire domingo às 9h (abre 9h às 14h). Enterprise Dundas fecha no domingo.`,`Leve CNH física, PID, passaporte e cartão de crédito do Derik. Ontário aceita CNH estrangeira até 3 meses, mas a locadora pode pedir PID.`,`Dentro do parque o mapa do Google mostra: <b>Behemoth e Backlot ao sul, Yukon Striker a sudoeste, Wonder Mountain no centro e Leviathan ao norte</b>. Confirme no mapa oficial do parque (botão) onde fica a entrada: se for ao norte, inverta a ordem.`,`Devolva segunda a partir das 8h. Cuidado com estacionamento de rua perto do Airbnb.`],
+legs:[{m:'transit',t:'Casa → Avis High Park (transporte público)',f:'home',v:[],to:'avis'},{m:'driving',t:'Avis → Vaughan Mills → Wonderland (carro)',f:'avis',v:['vmills'],to:'wonder'},{m:'walking',t:'Dentro do parque, em ordem de proximidade (Behemoth → Backlot → Yukon → Wonder Mountain → Leviathan)',f:'behemoth',v:['backlot','yukon','wm'],to:'leviathan'},{m:'driving',t:'Wonderland → Casa (carro)',f:'wonder',v:[],to:'home'}],
+stops:[
+S('🚗','Avis High Park (retirada)','09:00','Avis, 3193 Dundas St W, Toronto','Domingo 9h às 14h. Pergunte: aceita CNH BR + PID, caução, pneu de inverno, key drop.',{k:'avis',rq:'Avis, 3193 Dundas St W, Toronto, ON',ll:[43.6659,-79.4905],p:'Avis car rental Dundas St W Toronto'}),
+S('🛍️','Vaughan Mills (outlet)','11:00','Vaughan Mills, 1 Bass Pro Mills Dr, Vaughan','Domingo 11h às 19h ⚠️. Nike Factory, Adidas Outlet, New Balance, Puma, Tommy Hilfiger, Ralph Lauren, Bass Pro, Playdium. Almoce no food court (comida de fora é proibida no parque).',{k:'vmills',rq:'Vaughan Mills, 1 Bass Pro Mills Dr, Vaughan, ON',ll:[43.8256,-79.5395],wiki:'Vaughan Mills',x:[['Nike Factory',FQ('Nike Factory Store Vaughan Mills')],['Adidas Outlet',FQ('Adidas Outlet Vaughan Mills')]],leg:'🚗 ~35 a 45 min via Hwy 401 e 400 N ⚠️'}),
+S('🎡',"Canada's Wonderland (entrada e estacionamento)",'14:00 a 22:30',"Canada's Wonderland, 1 Canada's Wonderland Dr, Vaughan",'Ingresso online C$45 + taxa (pacote Haunt C$55). Estacionamento ~C$40 ⚠️. Sem fantasia depois das 18h. Reentrada só até 19h.',{k:'wonder',rq:"Canada's Wonderland, 1 Canada's Wonderland Dr, Vaughan, ON",ll:[43.8429,-79.5391],wiki:"Canada's Wonderland",x:[['Ingressos','https://www.sixflags.com/canadaswonderland/daily-tickets'],['Mapa do parque',FQ("Canada's Wonderland park map")],['Haunt','https://www.sixflags.com/canadaswonderland/events/haunt']],leg:'🚗 ~5 a 10 min ⚠️'}),
+S('🎢','Behemoth (extremo sul)','1º',"Behemoth, 1 Canada's Wonderland Drive, Vaughan",'137 cm. Gigante, vá logo ao entrar.',{k:'behemoth',rq:"Behemoth, 1 Canada's Wonderland Drive, Vaughan",ll:[43.8405,-79.5365],wiki:'Behemoth (roller coaster)'}),
+S('🎢','Backlot Stunt Coaster','2º',"Backlot Stunt Coaster, 1 Canada's Wonderland Drive, Vaughan",'122 cm. Perto do Behemoth. Também por perto: Vortex e AlpenFury ⚠️ confirme no mapa do parque.',{k:'backlot',rq:"Backlot Stunt Coaster, 1 Canada's Wonderland Drive, Vaughan",ll:[43.8413,-79.5375],wiki:'Backlot Stunt Coaster',leg:'🚶 ~3 min'}),
+S('⚡','Yukon Striker (sudoeste)','3º',"Yukon Striker, 4 Canada's Wonderland Dr, Vaughan",'132 cm, queda de 90 graus. Use armário, sem objetos soltos.',{k:'yukon',rq:"Yukon Striker, 4 Canada's Wonderland Dr, Vaughan",ll:[43.8420,-79.5410],wiki:'Yukon Striker',leg:'🚶 ~5 min'}),
+S('⛰️',"Wonder Mountain's Guardian (centro)",'~17:00',"Wonder Mountain, Vaughan, ON L4H 2E8",'122 cm. Interativo, passa pela montanha-ícone.',{k:'wm',rq:'Wonder Mountain, Vaughan, ON L4H 2E8',ll:[43.8433,-79.5395],wiki:"Wonder Mountain's Guardian",leg:'🚶 ~8 min'}),
+S('🎢','Leviathan (extremo norte)','último',"Leviathan, 1 Canada's Wonderland Drive, Vaughan",'137 cm. O ícone do parque. Com fila curta à noite vale ir direto. ⚠️ Em dia cheio vá primeiro e inverta a lista.',{k:'leviathan',rq:"Leviathan, 1 Canada's Wonderland Drive, Vaughan",ll:[43.8450,-79.5395],wiki:"Leviathan (Canada's Wonderland)",leg:'🚶 ~5 min'}),
+S('👻','Haunt: scare zones e Inferno','18:00 a 22:00',"Canada's Wonderland Halloween Haunt, Vaughan",'Scare zones incluídas, mazes pagos à parte (a partir de C$10 ⚠️). Show de fogo Inferno. Fogos de artifício: não encontrei neste dia.',{opt:true,ll:[43.8429,-79.5380],p:"Canada's Wonderland Halloween Haunt scare zone"}),
+S('☕','Tim Hortons (Vaughan Mills)','no caminho','Tim Hortons, 1 Bass Pro Mills Dr, Vaughan, ON','Café quente antes do parque. Dentro do Vaughan Mills.',{opt:true,tim:true})
+],
+tips:['🍽️ Garrafa d\'água vazia pode (bebedouro). Plano de comida C$29 ou C$39.','🎰 "Las Vegas canadense" não é aqui, é a Clifton Hill em Niágara.','🧥 8 a 11°C de dia, mais frio à noite: camadas, gorro, luvas, power bank.']},
+
+/* ===== CENTRO ===== */
+{id:'centro',ico:'🏙️',t:'Rota Centro · CN Tower, aquário, letreiro',w:'Dia de sol ou parcial · sugestão sáb 7/nov',b:'SOL',
+intro:'Um dia cheio: CN Tower com almoço no 360, aquário, bonde vermelho, golden hour em Fort York, KŌST, letreiro TORONTO e Times Square. A ordem vai de leste a oeste durante o dia e volta ao leste à noite, sem zigue-zague. Pôr do sol ~16:50.',
+how:[BASE,`<b>Opção A (recomendada):</b> bonde 512 Eastbound até <b>St Clair West</b> (Linha 1). Linha 1 sentido <b>Finch</b> (sul): Dupont, Spadina, St George, Museum, Queen's Park, St Patrick, Osgoode, St Andrew, <b>Union</b>. ~50 a 60 min ⚠️.`,`<b>Opção B:</b> 41 Keele sul até Keele, Linha 2 Eastbound até <b>St George</b>, depois Linha 1 sentido Finch até Union. ~55 min.`,`Tarifa C$3,30 com PRESTO ou cartão contactless, transferência de 2h. Use sempre o mesmo cartão.`],
+legs:[{m:'transit',t:'Casa → Union Station',f:'home',v:[],to:'union'},{m:'walking',t:'Union → CN Tower → Ripley\'s → Roundhouse → King & John → KŌST → Clarence Sq → Fort York',f:'union',v:['cn','ripleys','round','kingjohn','kost','clarence'],to:'fort',n:'~4 km, com paradas. Se cansar, pegue o bonde 504 King/509.'},{m:'transit',t:'Fort York → Nathan Phillips Square (bonde/metrô)',f:'fort',v:[],to:'nathan'},{m:'walking',t:'Nathan Phillips → Yonge-Dundas Square',f:'nathan',v:[],to:'yd',n:'~15 min a pé.'},{m:'transit',t:'Yonge-Dundas → Casa',f:'yd',v:[],to:'home'}],
+stops:[
+S('🚇','Union Station','09:30','Union Station, 65 Front St W, Toronto','Chegada. Arquitetura linda por dentro. CN Tower a 10 min a pé pelo SkyWalk.',{k:'union',rq:'Union Station, 65 Front St W, Toronto, ON',ll:[43.6453,-79.3806],wiki:'Union Station (Toronto)',leg:'🚇 512 → St Clair West → L1 sentido Finch'}),
+S('🍽️','CN Tower + Restaurante 360 (giratório)','11:30 almoço','CN Tower, 290 Bremner Blvd, Toronto','Mínimo C$75/pessoa em comida e inclui subida e mirante. Prix fixe 2 pratos C$75. Reserve 11:30 e peça janela, gira 72 min. Reserva abre 2 meses antes.',{k:'cn',rq:'CN Tower, 290 Bremner Blvd, Toronto, ON',ll:[43.6426,-79.3871],wiki:'CN Tower',x:[['Reservar','https://www.opentable.ca/r/360-the-restaurant-at-the-cn-tower-reservations-toronto?restref=40507&lang=en-CA']],leg:'🚶 ~10 min pelo SkyWalk'}),
+S('🐠',"Ripley's Aquarium",'13:30 · 2h',"Ripley's Aquarium of Canada, 288 Bremner Blvd, Toronto",'~C$40. Túnel de acrílico para vídeo. Do lado da CN Tower.',{k:'ripleys',rq:"Ripley's Aquarium of Canada, 288 Bremner Blvd, Toronto, ON",ll:[43.6424,-79.3860],img:PIN('49/39/b4/4939b46d15300576535bc68a77e65358'),wiki:"Ripley's Aquarium of Canada",leg:'🚶 ~3 min'}),
+S('🌳','Roundhouse Park','15:30','Roundhouse Park, 255 Bremner Blvd, Toronto','Espaço aberto com a torre inteira. Folhas já acabando em novembro ⚠️.',{k:'round',rq:'Roundhouse Park, 255 Bremner Blvd, Toronto, ON',ll:[43.6417,-79.3897],wiki:'Roundhouse Park',leg:'🚶 ~5 min'}),
+S('🚋','Bonde vermelho + foto (King & John)','15:50','King St W and John St, Toronto','Fotografe o bonde se aproximando com a CN Tower acima. Pegue o 504 King se quiser andar nele.',{k:'kingjohn',rq:'King St W & John St, Toronto, ON',ll:[43.6463,-79.3913],img:PIN('39/95/fe/3995fee1ab65bec4b08995583f772bad'),wiki:'Toronto streetcar system',leg:'🚶 ~10 min (sobe a John St)'}),
+S('🍸','KŌST rooftop (Bisha, 44º andar)','16:10 ou à noite','KOST Bisha Hotel, 80 Blue Jays Way, Toronto','Bar e restaurante abertos ao público, piscina só de hóspede. Sun Club acabou em 30/set. Reserva (437) 800-5938 ⚠️. Vista da CN Tower; o prédio do vídeo que você viu não é este.',{k:'kost',rq:'KOST, 80 Blue Jays Way, Toronto, ON',ll:[43.6442,-79.3925],p:'KOST Toronto rooftop CN Tower view',leg:'🚶 ~3 min'}),
+S('🍂','Clarence Square (CN + árvores)','16:25','Clarence Square, Spadina Ave and Wellington St W, Toronto','Praça do seu board com bonde e árvores vermelhas. Não achei fonte confirmando a vista da torre, visite e confira ⚠️. Folhas só até ~5/nov.',{k:'clarence',rq:'Clarence Square, Spadina Ave & Wellington St W, Toronto, ON',ll:[43.6446,-79.3962],img:PIN('b2/b7/f5/b2b7f5fd43d858f603bca39ac84bf51c'),p:'Clarence Square Toronto CN Tower tram',leg:'🚶 ~8 min'}),
+S('🌉','Garrison Crossing · Bathurst Bridge · Fort York','16:45 pôr do sol','Fort York National Historic Site, 250 Fort York Blvd, Toronto','Candidatos reais para a foto com a torre atrás dos trilhos. A ponte Garrison Crossing e a Bathurst Bridge ficam ao lado do forte.',{k:'fort',rq:'Fort York National Historic Site, 250 Fort York Blvd, Toronto, ON',ll:[43.6385,-79.4020],img:PIN('f4/98/b7/f498b72c85b7471186cca03a0331e854'),wiki:'Fort York',x:[['Garrison Crossing',MQ('Garrison Crossing, Toronto')],['Bathurst Bridge',MQ('Bathurst Street Bridge, Toronto')]],leg:'🚶 ~12 min'}),
+S('🔤','Letreiro TORONTO · Nathan Phillips Square','18:30','Nathan Phillips Square, 100 Queen St W, Toronto','Iluminado ao anoitecer. Estação Osgoode ou Queen. Pista de patinação grátis (abertura ~final de nov ⚠️).',{k:'nathan',rq:'Nathan Phillips Square, 100 Queen St W, Toronto, ON',ll:[43.6525,-79.3832],img:PIN('22/8c/e6/228ce6cb3c00be519e5cdab13446da6d'),wiki:'Nathan Phillips Square',leg:'🚋 511 Bathurst + 504 ⚠️, ou 🚇 ~25 min'}),
+S('📺','Yonge-Dundas Square ("Times Square")','19:15','Sankofa Square, 1 Dundas St E, Toronto','Telões depois do pôr do sol. Estação Dundas (Linha 1). Suba os degraus do lado do Eaton Centre. Volta: 505 Dundas ou metrô.',{k:'yd',rq:'Yonge-Dundas Square, 1 Dundas St E, Toronto, ON',ll:[43.6561,-79.3802],img:PIN('60/31/a0/6031a046ead892278cefc3ec84a99d83'),wiki:'Yonge–Dundas Square',leg:'🚶 ~15 min'}),
+S('🪜','Escadaria com a CN Tower atrás ❓','sem horário','Roundhouse Park, 255 Bremner Blvd, Toronto','Não consegui identificar a escadaria exata. Procure perto da base da torre (Bremner Blvd). Para achar: Google Lens na foto ou o geotag do post. Me mande o link que eu confirmo.',{opt:true,alert:true,ll:[43.6420,-79.3880],img:PIN('6c/5c/12/6c5c125d996bcddc98365c81fe2c74dd'),p:'CN Tower stairs photo Toronto',x:[['Google Lens','https://lens.google.com/']]}),
+S('🍸','Rooftop do vídeo do Instagram ❓','sem horário','CN Tower, 290 Bremner Blvd, Toronto','Não dá para identificar o prédio. Parece topo de prédio em construção ou acesso proibido (rooftopping). Alternativas legais: LookOut e Glass Floor da CN Tower (o estádio fica logo abaixo), o 360 e o KŌST. Pergunte ao autor nos comentários.',{opt:true,alert:true,ll:[43.6416,-79.3893],p:'CN Tower Rogers Centre aerial view'}),
+S('🏝️','Opção: balsa para Ward\'s Island','se sobrar luz','Jack Layton Ferry Terminal, 9 Queens Quay W, Toronto','Em novembro só vai a Ward\'s (partidas 16h, 16:30, 17:30, 18h). Último retorno 23:45. ~C$9,57 ⚠️. O barco das 21:20 é de verão.',{opt:true,ll:[43.6410,-79.3760],img:PIN('1e/6b/ec/1e6bec72710c47ac09576c3021abac8e'),wiki:'Toronto Island ferries'}),
+S('☕','Tim Hortons (Union Station, food court)','a qualquer hora','Tim Hortons, 65 Front St W, Toronto, ON','Dentro da Union Station (York Concourse).',{opt:true,tim:true}),
+S('☕','Tim Hortons Brookfield Place (salvo no seu Maps)','a qualquer hora','Tim Hortons Brookfield Place, 181 Bay St, Toronto, ON','Você salvou este no Maps. Fica a ~5 min a pé da Union.',{opt:true,tim:true})
+],
+tips:['Ordem: Union → CN/aquário → Roundhouse → King & John → KŌST → Clarence → Fort York (oeste) → bonde de volta ao leste → Nathan Phillips → Dundas Sq.','Yorkville fica na Rota Midtown.']},
+
+/* ===== HOQUEI ===== */
+{id:'hoquei',ico:'🏒',t:'Rota Hóquei',w:'Um jogo típico, de preferência barato',b:'FLEX',bc:'r',
+intro:'Preços mudam todo dia. Confira o total com taxas no checkout.',
+how:[BASE,`Scotiabank Arena (40 Bay St) fica ligada à estação <b>Union</b> pelo PATH. Siga a Opção A da Rota Centro.`,`Coliseum (Exhibition Place): metrô até Union, depois bonde 509 até Exhibition Loop, ou GO Exhibition.`,`Ingresso só digital. Bolsa menor que 16,5 x 11,5 cm, senão guarda-volumes ~C$20 a 25.`],
+legs:[{m:'transit',t:'Casa → Hockey Hall of Fame (Union)',f:'home',v:[],to:'hhof'},{m:'walking',t:'Hall of Fame → Scotiabank Arena',f:'hhof',v:[],to:'sba'},{m:'transit',t:'Casa → Coca-Cola Coliseum (Marlies 28/nov)',f:'home',v:[],to:'coli'},{m:'transit',t:'Casa → Varsity Arena (Blues)',f:'home',v:[],to:'varsity'}],
+stops:[
+S('🏆','Hockey Hall of Fame','10h às 17h','Hockey Hall of Fame, 30 Yonge St, Toronto','Adulto C$29,95 + imposto. Fechado seg 9/nov. Perto de Union, junte à Rota Centro.',{k:'hhof',rq:'Hockey Hall of Fame, 30 Yonge St, Toronto, ON',ll:[43.6471,-79.3773],wiki:'Hockey Hall of Fame',x:[['Ingressos','https://www.hhof.com/visit/ticketsandhours.html']]}),
+S('🏒','Toronto Maple Leafs (NHL)','ter 3/nov 19h ou dom 8/nov 19h','Scotiabank Arena, 40 Bay St, Toronto','Mais baratos da série: 3/nov vs Utah e 8/nov vs New Jersey, a partir de ~$80 (moeda ⚠️), com taxas ~C$110 a 150. Sábados (7, 14, 21/nov) são os mais caros.',{k:'sba',rq:'Scotiabank Arena, 40 Bay St, Toronto, ON',ll:[43.6435,-79.3791],wiki:'Scotiabank Arena',x:[['Ingressos','https://www.nhl.com/mapleleafs/tickets/single'],['SeatGeek','https://seatgeek.com/toronto-maple-leafs-tickets']],leg:'🚶 ~5 min'}),
+S('🏒','Toronto Marlies (AHL) · RECOMENDADO','sáb 21/nov 13:30','Scotiabank Arena, 40 Bay St, Toronto','Liga de formação dos Leafs, no mesmo ginásio, bem mais barato (~C$20 a 45 ⚠️). 21/nov tem previsão de chuva, ótimo dia indoor. Vs Chicago Wolves.',{opt:true,ll:[43.6435,-79.3791],wiki:'Toronto Marlies',x:[['Ingressos','https://www.ticketmaster.ca/event/10006514EE735A17']]}),
+S('🏒','Marlies no Coliseum','sáb 28/nov 16h','Coca-Cola Coliseum, 100 Princes Blvd, Toronto','"Mascot Mayhem". Arena pequena no Exhibition Place.',{k:'coli',rq:'Coca-Cola Coliseum, 100 Princes Blvd, Toronto, ON',ll:[43.6330,-79.4180],wiki:'Coca-Cola Coliseum (Toronto)',opt:true,x:[['Ingressos','https://www.ticketmaster.ca/event/10006514014DF469']]}),
+S('🎓','U of T Varsity Blues','sáb 7/nov 16h ou sáb 28/nov 15h','Varsity Arena, 299 Bloor St W, Toronto','O mais barato (~$10 ⚠️, preço antigo). Perto da estação St George.',{k:'varsity',rq:'Varsity Arena, 299 Bloor St W, Toronto, ON',opt:true,ll:[43.6672,-79.3977],p:'Varsity Arena Toronto hockey',x:[['Ingressos','https://varsityblues.universitytickets.com/w/default.aspx']]}),
+S('🎽','Camisa dos Leafs','sem horário','Real Sports Bar and Grill, 15 York St, Toronto','Camisa oficial custa centenas. Opção barata: camiseta ou boné no Team Shop do Scotiabank Arena ou Eaton Centre.',{opt:true,ll:[43.6438,-79.3813],p:'Toronto Maple Leafs shop jersey'})
+],
+tips:['Outros: Brampton Steelheads (OHL) 15/nov, ~C$32 ⚠️. Toronto Rock joga em Hamilton (28/nov). PWHL só em dezembro.','Etiqueta: em pé no hino, "Go Leafs Go" é bem-vindo.']},
+
+/* ===== NIAGARA ===== */
+{id:'niagara',ico:'🌊',t:'Rota Niágara Falls',w:'Sáb 14/nov (recomendado) ou 7/nov · carro',b:'SOL',compare:true,
+intro:'Carro alugado: retire na sexta (Avis High Park sex 8h às 18h). QEW, ~130 km, 75 a 120 min. Aero Car fechado desde 1/nov. A ordem segue o caminho a pé: Table Rock sobe o rio, depois Skylon e Clifton Hill (morro acima), tudo sem voltar atrás.',
+how:[`Rota de carro: Gardiner Expressway oeste → QEW → Niagara Falls. Obra na Burlington Skyway até dez/2026, confira o Ontario 511.`,`Estacione no Falls Parking (Lot A, 6635 Niagara Pkwy) e ande: Table Rock, Journey, Queen Victoria Park, Oakes, cruzeiro, Skylon, Clifton Hill. Passes combinados venceram em 1/nov, compre avulso.`,`Sem visto americano, não cruze a Rainbow Bridge.`],
+legs:[{m:'driving',t:'Casa → Table Rock (carro)',f:'home',v:[],to:'tr'},{m:'walking',t:'A pé: Table Rock → Journey → Queen Victoria → Oakes → Cruzeiro → Skylon → Clifton Hill → Midway → SkyWheel',f:'tr',v:['journey','qvp','oakes','cruise','skylon','clifton','midway'],to:'skywheel'},{m:'driving',t:'Clifton Hill → Casa (carro)',f:'clifton',v:[],to:'home'}],
+stops:[
+S('🌊','Table Rock','10:00','Table Rock Welcome Centre, 6650 Niagara Pkwy, Niagara Falls','Borda das Horseshoe Falls, a foto mais próxima, com neblina. Pano de lente.',{k:'tr',rq:'Table Rock Welcome Centre, 6650 Niagara Pkwy, Niagara Falls, ON',ll:[43.0802,-79.0742],img:PIN('75/29/e4/7529e48a556d66e9339473655554fd5f'),wiki:'Horseshoe Falls',leg:'🚗 ~1h30'}),
+S('🚪','Journey Behind the Falls','10:40','Journey Behind the Falls, 6650 Niagara Pkwy, Niagara Falls','$33 + tax (~$37). Túneis atrás da queda. Reserve horário online.',{k:'journey',rq:'Journey Behind the Falls, 6650 Niagara Pkwy, Niagara Falls, ON',ll:[43.0800,-79.0745],wiki:'Journey Behind the Falls',leg:'🚶 no mesmo prédio'}),
+S('🌿','Queen Victoria Park','11:45','Queen Victoria Park, Niagara Falls, ON','Duas cataratas juntas, no parapeito. Centro das luzes do Festival.',{k:'qvp',rq:'Queen Victoria Park, Niagara Falls, ON',ll:[43.0830,-79.0720],wiki:'Queen Victoria Park (Niagara Falls)',leg:'🚶 ~8 min'}),
+S('🎭','Oakes Garden Theatre','12:20','Oakes Garden Theatre, 5825 River Rd, Niagara Falls, ON','Vista da American Falls e ponto de fogos 20h.',{k:'oakes',rq:'Oakes Garden Theatre, 5825 River Rd, Niagara Falls, ON',ll:[43.0900,-79.0710],wiki:'Oakes Garden Theatre',leg:'🚶 ~10 min'}),
+S('⛵','Niagara City Cruises','13:15 ⚠️','Niagara City Cruises, 5920 Niagara Pkwy, Niagara Falls','~C$54 com HST, poncho incluso. Fim de temporada, confirme se opera. Almoço barato na Clifton Hill antes (~C$15 a 20 por pessoa ⚠️).',{k:'cruise',rq:'Niagara City Cruises, 5920 Niagara Pkwy, Niagara Falls, ON',ll:[43.0888,-79.0690],p:'Niagara City Cruises Voyage to the Falls',leg:'🚶 ~5 min'}),
+S('🗼','Skylon Tower','16:40 pôr do sol','Skylon Tower, 5200 Robinson St, Niagara Falls','Mirante $18, Day & Night $22. Restaurante giratório: reserve. Luzes das cataratas ligam às 16:30. Depois da torre, volte a Table Rock na hora azul (17:30).',{k:'skylon',rq:'Skylon Tower, 5200 Robinson St, Niagara Falls, ON',ll:[43.0854,-79.0794],wiki:'Skylon Tower',leg:'🚶 ~15 min'}),
+S('🎡','Clifton Hill ("Las Vegas")','17:45','Clifton Hill, Niagara Falls, ON','Rua de néon: museus de cera, casas assombradas, cassinos Casino Niagara e Fallsview. Foto à noite.',{k:'clifton',rq:'Clifton Hill, Niagara Falls, ON',ll:[43.0912,-79.0730],wiki:'Clifton Hill (Niagara Falls)',leg:'🚶 ~10 min'}),
+S('🕹️','Great Canadian Midway (arcade)','18:30','Great Canadian Midway, 4848 Clifton Hill, Niagara Falls','É o arcade (aberto até 1h/2h). O kart é outro (próximo card).',{k:'midway',rq:'Great Canadian Midway, 4848 Clifton Hill, Niagara Falls, ON',ll:[43.0912,-79.0740],img:PIN('0d/68/96/0d6896501dec07ee41b4d6307bab1013'),leg:'🚶 na própria rua'}),
+S('🏎️','Niagara Speedway (go-kart)','noite','Niagara Speedway, Clifton Hill, Niagara Falls ON','~C$12 por corrida ⚠️ (preço de feriado). Horário de novembro: não achei, depende do clima. Fica na Clifton Hill.',{opt:true,ll:[43.0910,-79.0745],p:'Niagara Speedway Clifton Hill go kart'}),
+S('🎡','Niagara SkyWheel','19:15','Niagara SkyWheel, 4960 Clifton Hill, Niagara Falls','~C$15 ⚠️, cabine fechada. Aberta até 1h/2h.',{k:'skywheel',rq:'Niagara SkyWheel, 4960 Clifton Hill, Niagara Falls, ON',ll:[43.0905,-79.0775],wiki:'Niagara SkyWheel',leg:'🚶 ~3 min'}),
+S('🏝️','Dufferin Islands (só com Festival)','só em 14/nov','Dufferin Islands, Niagara Falls ON','Reflexo das luzes nos lagos, menos gente. Fica ao sul de Table Rock.',{opt:true,ll:[43.0770,-79.0690],wiki:'Dufferin Islands'}),
+S('💦','Desvio de carro: Whirlpool, Niagara Glen, Floral Clock','opcional','Whirlpool Aero Car, 3850 Niagara Pkwy, Niagara Falls','Aero Car fechado (era $25). O mirante do redemoinho e a trilha do Glen dão foto bonita. Floral Clock sem flores em nov.',{opt:true,ll:[43.1190,-79.0680],wiki:'Whirlpool Aero Car',x:[['Niagara Glen',MQ('Niagara Glen Nature Reserve, 3050 Niagara Pkwy, Niagara Falls ON')],['Floral Clock',MQ('Niagara Floral Clock, Niagara Pkwy, Niagara Falls ON')]]}),
+S('☕','Tim Hortons (Clifton Hill)','no caminho','Tim Hortons, 4950 Clifton Hill, Niagara Falls, ON','Café quente no meio da Clifton Hill.',{opt:true,tim:true})
+],
+tips:['🎬 Vídeos: <a href="https://www.youtube.com/watch?v=Fugy676dMF0">noite fria de sábado</a> · <a href="https://www.youtube.com/watch?v=QDg52BpsEVc">caminhada + fogos 2024</a> · <a href="https://www.youtube.com/watch?v=hPaAtypTtag">laser + fogos 2025</a> · <a href="https://www.youtube.com/@WFOLNF">canal oficial @WFOLNF</a> · <a href="https://www.tiktok.com/@niagarafallstourism">TikTok oficial</a>. Os vídeos que achei podem ser de dezembro. Mas em 2025 os fogos foram em 15, 21, 22, 28 e 29/nov (Niagara Parks).','🎆 Fogos: sextas e sábados 20h, 5 min.']},
+
+/* ===== MIDTOWN ===== */
+{id:'midtown',ico:'🏰',t:"Rota Casa Loma + ROM + Queen's Park + Yorkville",w:'Dia nublado ou chuvoso · sugestão dom 15/nov',b:'INDOOR/SOL',bc:'r',
+intro:'Casa Loma e ROM têm muito dentro. A ordem vai do noroeste (Casa Loma) descendo ao UofT, depois subindo em linha reta: UofT → Queen\'s Park → ROM → Yorkville, sem voltar.',
+how:[BASE,`Bonde 512 Eastbound até <b>St Clair West</b>. Linha 1 sentido <b>Finch</b>: Dupont (1ª parada, Casa Loma). Depois Spadina, St George (UofT), Museum (ROM), Queen's Park.`,`Casa Loma: saia na <b>Dupont</b>, suba a Spadina Rd e os Baldwin Steps (110 degraus), ~10 min. Alternativa: ônibus 127 Davenport (30 min de intervalo ⚠️).`],
+legs:[{m:'transit',t:'Casa → Casa Loma (Dupont)',f:'home',v:[],to:'casaloma'},{m:'transit',t:'Casa Loma → University College',f:'casaloma',v:[],to:'uc'},{m:'walking',t:"A pé: UofT → Queen's Park → ROM → Yorkville",f:'uc',v:['qpark','rom'],to:'yorkville'},{m:'transit',t:'Yorkville → Casa',f:'yorkville',v:[],to:'home'}],
+stops:[
+S('🏰','Casa Loma','09:30 · 2h30','Casa Loma, 1 Austin Terrace, Toronto','9:30 às 17h. Preço oficial $30 mas guia de 2026 fala ~$45 ⚠️. Natal no castelo começa depois de 30/nov ⚠️. Fotografe os Baldwin Steps.',{k:'casaloma',rq:'Casa Loma, 1 Austin Terrace, Toronto, ON',ll:[43.6780,-79.4094],img:PIN('aa/ab/f3/aaabf3f9ca4a1ef56f7a0fd391f55447'),wiki:'Casa Loma',leg:'🚇 512 → L1 sentido Finch, 1 parada: Dupont, +10 min a pé',x:[['Baldwin Steps',MQ('Baldwin Steps, Toronto')]]}),
+S('🎬','Filmes em Casa Loma (vídeo)','durante a visita','Casa Loma, 1 Austin Terrace, Toronto','Confirmados em fonte: <b>X-Men (2000)</b>, <b>Chicago (2002)</b>, <b>Scott Pilgrim vs. the World (2010)</b>. Citados sem checagem: The Love Guru, Cocktail, Johnny Mnemonic, Hannibal, RoboCop ⚠️. Shadowhunters: não achei ligação.',{opt:true,ll:[43.6780,-79.4094],img:PIN('d1/a4/a4/d1a4a42a895d28d5b834a812313de176')}),
+S('🎓','University of Toronto · University College','13:00',"University College, 15 King's College Cir, Toronto",'Prédios de castelo, arcos e pátios, pouca gente. Esquilos pretos por todo lado.',{k:'uc',rq:"University College, 15 King's College Cir, Toronto, ON",ll:[43.6619,-79.3957],wiki:'University College, Toronto',leg:'🚇 Dupont → Spadina → St George (L1)'}),
+S('🏛️',"Queen's Park (parlamento)",'14:00','Ontario Legislative Building, 111 Wellesley St W, Toronto','Arenito rosa, fachada para o sul, luz boa 10h às 15h. O "castelo com bandeira".',{k:'qpark',rq:'Ontario Legislative Building, 111 Wellesley St W, Toronto, ON',ll:[43.6644,-79.3923],img:PIN('3f/98/98/3f9898a118a37400d03a8b10225d9ef2'),wiki:'Ontario Legislative Building',leg:'🚶 ~12 min'}),
+S('🦖','ROM · dinossauros','15:00 · 2h',"Royal Ontario Museum, 100 Queen's Park, Toronto",'Abre 10h, fecha 17:30, fechado seg. Galeria dos dinossauros reaberta em dez/2025 (nível 2: T. rex, Triceratops). Estação Museum na porta.',{k:'rom',rq:"Royal Ontario Museum, 100 Queen's Park, Toronto, ON",ll:[43.6677,-79.3948],wiki:'Royal Ontario Museum',leg:'🚶 ~8 min'}),
+S('🛍️','Yorkville','17:30','Yorkville Village, 55 Avenue Rd, Toronto','Cumberland, Hazelton Ave, Yorkville Ave: vitrines acesas ao entardecer. <b>Sobre a foto do board:</b> não achei o arco "Yorkville Village" nem vista da CN Tower de lá (3,5 km). A foto parece editada ou gerada ⚠️. 55 Avenue Rd é o shopping, por isso o Maps não bateu.',{k:'yorkville',rq:'Cumberland St & Hazelton Ave, Toronto, ON',ll:[43.6711,-79.3951],img:PIN('59/db/75/59db75905a13653a84be9552f77ef68d'),alert:true,wiki:'Yorkville, Toronto',leg:'🚶 ~10 min pela Bloor'}),
+S('🍸','Rooftop em Yorkville (opcional)','sem horário','Park Hyatt Toronto, 4 Avenue Rd, Toronto','Park Hyatt Roof Lounge: vista da CN distante ⚠️, não verifiquei.',{opt:true,ll:[43.6711,-79.3952],p:'Park Hyatt Toronto Roof lounge view'})
+],
+tips:['Perto da Casa Loma também: Spadina House.','ROM: não achei a tabela oficial ⚠️. Terceira terça do mês tem noite grátis ⚠️.']},
+
+/* ===== LESTE ===== */
+{id:'leste',ico:'🌳',t:'Rota Leste · Riverdale, picnic e Distillery',w:'Dia de sol · sugestão dom 8/nov',b:'SOL',
+intro:'Do norte para o sul, sem voltar: Riverdale Farm → Cabbagetown → picnic no morro do Riverdale Park East → Distillery na luz dourada. Em novembro faz frio: térmica, manta, luvas. Se quiser o pôr do sol no skyline, inverta e termine no morro.',
+how:[BASE,`<b>41 Keele Southbound</b> até <b>Keele</b>, Linha 2 <b>Eastbound</b> (sentido Kennedy) até <b>Castle Frank</b> (Riverdale Farm). ~55 min ⚠️.`,`Volta: do Distillery, bonde 504 King ou ônibus até metrô (Linha 2 Westbound) e 41 Keele Northbound.`,`Tommy Thompson Park é outro dia: L2 até Donlands, ônibus 83 Jones sul, ~1h30 ⚠️.`],
+legs:[{m:'transit',t:'Casa → Riverdale Farm (Castle Frank)',f:'home',v:[],to:'farm'},{m:'walking',t:'A pé: Farm → Cabbagetown → Riverdale Park East → Distillery',f:'farm',v:['cabbage','rpark'],to:'distillery'},{m:'transit',t:'Distillery → Casa',f:'distillery',v:[],to:'home'}],
+stops:[
+S('🐮','Riverdale Farm','10:00','Riverdale Farm, 201 Winchester St, Toronto','Grátis, 9h às 17h. Vacas, cavalos, ovelhas. Estação Castle Frank (Linha 2).',{k:'farm',rq:'Riverdale Farm, 201 Winchester St, Toronto, ON',ll:[43.6665,-79.3620],wiki:'Riverdale Farm',leg:'🚇 41 → Keele → L2 Eastbound → Castle Frank'}),
+S('🏘️','Cabbagetown','11:30','Parliament St & Carlton St, Toronto','Casas vitorianas, almoço e café. Compre sanduíche e térmica para o morro.',{k:'cabbage',rq:'Parliament St & Carlton St, Toronto, ON',ll:[43.6640,-79.3680],wiki:'Cabbagetown, Toronto',leg:'🚶 ~10 min'}),
+S('🧺','Riverdale Park East · mirante e picnic','13:00','Riverdale Park East, 550 Broadview Ave, Toronto','Vista aberta do centro com CN Tower. Um banco só, leve manta. Em novembro 30 a 40 min de picnic.',{k:'rpark',rq:'Riverdale Park East, 550 Broadview Ave, Toronto, ON',ll:[43.6655,-79.3560],img:PIN('ff/da/34/ffda34b6ab7f8024ee83e1876e4e1470'),wiki:'Riverdale Park',leg:'🚶 ~20 min ou 🚋 504 ⚠️'}),
+S('🏭','Distillery District','15:30','Distillery District, 55 Mill St, Toronto','Tijolinho vitoriano na luz dourada (pôr do sol 16:50). <b>Winter Village de 12/nov a 3/jan</b> (árvore acesa dia 12, 18h). Em 8/nov o mercado ainda não abriu.',{k:'distillery',rq:'Distillery District, 55 Mill St, Toronto, ON',ll:[43.6503,-79.3596],img:PIN('50/03/60/500360f9923977dff3a088143478fd64'),wiki:'Distillery District',leg:'🚶 ~25 min ou 🚋 504 ⚠️'}),
+S('🌆','Opção: Tommy Thompson Park (Skyline Viewpoint)','outro dia, 4h','Tommy Thompson Park, 1 Leslie St, Toronto','O pin "Toronto Skyline Viewpoint" deve ser aqui, ~43.613,-79.344 ⚠️. 30 a 40 min a pé cada sentido. Fim de semana 5:30 às 21h. Sem carro dentro.',{opt:true,ll:[43.6131,-79.3438],wiki:'Tommy Thompson Park',x:[['Rota de transporte',DQ('Tommy Thompson Park, 1 Leslie St, Toronto, ON','transit')]]}),
+S('☕','Tim Hortons (Danforth, perto de Broadview)','no caminho','Tim Hortons, 91 Danforth Ave, Toronto, ON','Café quente antes do morro.',{opt:true,tim:true})
+],
+tips:['Opção mais perto de casa: High Park (Rota Animais).','Evergreen Brick Works e Cedarvale também são boas em dia de sol.']},
+
+/* ===== ANIMAIS ===== */
+{id:'animais',ico:'🐿️',t:'Rota Animais da América do Norte',w:'Dia de sol · sugestão dom 29/nov',b:'SOL',
+intro:'Realista para novembro: esquilos fáceis, patos e gansos, bisão e lhama no zoo grátis do High Park (perto de casa), e ursos só no Toronto Zoo (dia separado, com carro).',
+how:[BASE,`<b>High Park:</b> 41 Keele Southbound até Keele, Linha 2 <b>Westbound</b> (sentido Kipling), 2 paradas (Runnymede, High Park) ⚠️. ~25 min.`,`<b>Toronto Zoo:</b> 41 Keele → Keele → L2 Eastbound até <b>Kennedy</b> → ônibus <b>86A</b>, ~1h45. O 86A só roda <b>seg a sex</b> depois do verão ⚠️: com carro alugado fica fácil.`],
+legs:[{m:'transit',t:'Casa → High Park Zoo',f:'home',v:[],to:'hpzoo'},{m:'walking',t:'A pé: Zoo → Grenadier Pond',f:'hpzoo',v:[],to:'pond'},{m:'transit',t:'Grenadier Pond → Casa',f:'pond',v:[],to:'home'},{m:'driving',t:'Casa → Toronto Zoo (carro, dia separado)',f:'home',v:[],to:'tzoo'}],
+stops:[
+S('🐿️','High Park Zoo','10:00','High Park Zoo, High Park, Toronto','Grátis. Bisões, lhamas, pavões, renas, highland cattle. Horário diverge ⚠️. Esquilos pretos e cinzas pelo parque.',{k:'hpzoo',rq:'High Park Zoo, 1873 Bloor St W, Toronto, ON',ll:[43.6470,-79.4630],img:PIN('32/89/29/328929ed582d8d75080e5652ca175f7b'),wiki:'High Park Zoo',leg:'🚇 41 → Keele → L2 Westbound → High Park'}),
+S('🦢','Grenadier Pond','11:30','Grenadier Pond, High Park, Toronto','Patos, gansos e cisnes. Carvalhos ao redor (savana de carvalhos) com folha marrom-avermelhada ⚠️.',{k:'pond',rq:'Grenadier Pond, Toronto, ON',ll:[43.6430,-79.4690],p:'Grenadier Pond High Park Toronto autumn',leg:'🚶 ~10 min'}),
+S('🐻‍❄️','Toronto Zoo · ursos polares, alce, bisão','dia separado, com carro','Toronto Zoo, 2000 Meadowvale Rd, Toronto','9:30 às 16:30 em nov. Preço varia (~C$51 ⚠️), estacionamento C$20. Polares ativos no frio. Grizzlies podem estar hibernando. Veja os alertas antes.',{k:'tzoo',rq:'Toronto Zoo, 2000 Meadowvale Rd, Toronto, ON',opt:true,ll:[43.8177,-79.1859],wiki:'Toronto Zoo',x:[['Alertas','https://www.torontozoo.com/alerts']]}),
+S('🌳',"Queen's Park e UofT (esquilos)",'dia da Rota Midtown',"Queen's Park, Toronto",'Esquilos pretos e cinzas bem atrevidos.',{opt:true,ll:[43.6644,-79.3923],wiki:"Queen's Park (Toronto)"}),
+S('🐮','Riverdale Farm','Rota Leste','Riverdale Farm, 201 Winchester St, Toronto','Só animais de fazenda, sem ursos.',{opt:true,ll:[43.6665,-79.3620],wiki:'Riverdale Farm'}),
+S('🦝','Guaxinim (raccoon)','ao anoitecer','Cabbagetown, Toronto','Annex e Cabbagetown, perto de lixeiras. Não dê comida nem chegue perto.',{opt:true,ll:[43.6665,-79.3660],p:'raccoon Toronto street night'})
+],
+tips:['🐻 Ursos selvagens: Algonquin e Muskoka em novembro têm ursos hibernando, sem transporte e sem segurança. Não recomendo.','🦌 Cervos e castores: Don Valley e Humber, chance baixa ⚠️.']},
+
+/* ===== FOLHAS E NEVE ===== */
+{id:'folhas',ico:'🍁',t:'Rota Folhas e Neve',w:'Honesta: a cor viva já acabou',b:'AVISO',bc:'f',
+intro:'Cor viva de bordo em Toronto acaba por volta de 5/nov. Depois sobram carvalhos marrom-avermelhados, faias bronze, ginkgo amarelo. Neve de esqui só em dezembro. A rota a pé perto de casa fica na ordem: Earlscourt Park → Prospect Cemetery.',
+how:[`<b>Janela:</b> 31/out a ~10/nov. 1/nov é Wonderland, então use fim de tarde em 2 a 4/nov (13° a 14°) perto de casa, ou domingo 8/nov (10°).`,`Perto de casa, a pé. High Park, Cedarvale, UofT e Mount Pleasant: use o botão 🚇 de cada card.`],
+legs:[{m:'walking',t:'A pé perto de casa: Earlscourt Park → Prospect Cemetery',f:'home',v:['earls2'],to:'prospect',n:'Volte para casa a pé ou de ônibus 512.'},{m:'transit',t:'Casa → High Park (melhor local de carvalhos)',f:'home',v:[],to:'hp'}],
+stops:[
+S('🍂','Earlscourt Park','31/out a 5/nov','Earlscourt Park, 1200 Lansdowne Ave, Toronto','Perto do Airbnb, bordos e carvalhos ⚠️. A pé em ~12 min.',{k:'earls2',rq:'Earlscourt Park, 1200 Lansdowne Ave, Toronto, ON',ll:[43.6707,-79.4470],wiki:'Earlscourt Park'}),
+S('🍂','Prospect Cemetery','31/out a 5/nov','Prospect Cemetery, 1450 St Clair Ave W, Toronto','Bordos e carvalhos antigos ⚠️, na St Clair.',{k:'prospect',rq:'Prospect Cemetery, 1450 St Clair Ave W, Toronto, ON',ll:[43.6728,-79.4520],p:'Prospect Cemetery Toronto autumn',leg:'🚶 ~15 min'}),
+S('🌳','High Park (savana de carvalhos)','31/out a ~12/nov','High Park, 1873 Bloor St W, Toronto','O melhor candidato: carvalhos seguram marrom-avermelhado até meados de nov ⚠️. Estação High Park (L2).',{k:'hp',rq:'High Park, 1873 Bloor St W, Toronto, ON',opt:true,ll:[43.6465,-79.4637],img:PIN('32/89/29/328929ed582d8d75080e5652ca175f7b'),wiki:'High Park'}),
+S('🌳','Cedarvale Park / ravina','31/out a ~10/nov','Cedarvale Park, 443 Arlington Ave, Toronto','Faias e carvalhos na ravina ⚠️. Bonde 512 até Arlington/Bathurst.',{opt:true,ll:[43.6950,-79.4150],p:'Cedarvale Park Toronto autumn'}),
+S('🎓','UofT Front Campus','31/out a ~10/nov',"University of Toronto Front Campus, 27 King's College Cir, Toronto",'Carvalhos e ginkgo ⚠️. Combina com a Rota Midtown.',{opt:true,ll:[43.6600,-79.3960],p:'University of Toronto front campus autumn'}),
+S('🌳','Mount Pleasant Cemetery','31/out a ~8/nov','Mount Pleasant Cemetery, 375 Mount Pleasant Rd, Toronto','Árvores maduras variadas, ginkgo e faia ⚠️. L1 Davisville.',{opt:true,ll:[43.6930,-79.3830],wiki:'Mount Pleasant Cemetery, Toronto'}),
+S('🌲','Evergreen Brick Works','início de nov','Evergreen Brick Works, 550 Bayview Ave, Toronto','Mata de ravina com carvalhos ⚠️.',{opt:true,ll:[43.6850,-79.3640],p:'Evergreen Brick Works Toronto autumn'}),
+S('🛷','Tubing / esqui','só dezembro','Snow Valley Ski Resort, Barrie','Nada abre até 30/nov. Previsões: Horseshoe e Moonstone ~4/dez, Blue Mountain 7 a 11/dez, Glen Eden 18/dez ⚠️. Mais perto de Toronto: Mount Chinguacousy (Brampton, tubing C$13,94 / 6 descidas, sem data) e Earl Bales (jan a mar).',{opt:true,no:true,ll:[43.7240,-79.7250],x:[['Chinguacousy',MQ('Mount Chinguacousy, 9050 Bramalea Rd, Brampton')],['Earl Bales',MQ('Earl Bales Ski and Snowboard Centre, North York')]],p:'snow tubing Ontario'}),
+S('☃️','Skibunda na cidade, se nevar','~23 a 26/nov ⚠️','Bickford Park, 400 Grace St, Toronto','Previsão mín -3° em 23/nov. Morros liberados pela cidade: Bickford Park (o mais perto), Cedarvale, Riverdale, Withrow, Corktown Common, Centennial Park. Earlscourt Park não está na lista oficial.',{opt:true,ll:[43.6590,-79.4300],p:'tobogganing Toronto Bickford Park',x:[['Lista oficial','https://www.toronto.ca/explore-enjoy/parks-recreation/program-activities/ice-snow-activities/tobogganing/']]}),
+S('🚡','Kelso chairlift (outono)','31/out a 1/nov ⚠️','Kelso Conservation Area, Milton','Em 2025 foi só fins de semana, de 4/out a 2/nov. Para 2026 confira kelsopark.ca. Precisa de carro.',{opt:true,ll:[43.5100,-79.9500],wiki:'Kelso Conservation Area',x:[['Site','https://www.kelsopark.ca']]}),
+S('🎢','Blue Mountain · Ridge Runner','carro, dia inteiro','Blue Mountain Resort, Collingwood ON','Montanha-russa na floresta, ano todo exceto abr e mai ⚠️. ~2h30 de carro, horário de novembro não achei.',{opt:true,ll:[44.5020,-80.3170],wiki:'Blue Mountain Resort'}),
+S('🚂','Trenzinho de outono','sem data','South Simcoe Railway, Tottenham ON','South Simcoe terminou em 18/out. Credit Valley Explorer foi descontinuado. Nada em nov.',{opt:true,no:true,ll:[44.0200,-79.8000],p:'South Simcoe Railway fall colour'}),
+S('⛸️','Eventos de inverno','novembro','Nathan Phillips Square, Toronto','<b>Royal Winter Fair</b> 6 a 15/nov (Exhibition Place) · <b>Distillery Winter Village</b> 12/nov a 3/jan · <b>Santa Claus Parade</b> ⚠️ dom 22/nov · <b>Cavalcade of Lights</b> ⚠️ sáb 28/nov 17h a 22h · patinação grátis (abertura ~final de nov ⚠️).',{opt:true,ll:[43.6525,-79.3832],img:PIN('a4/a4/7f/a4a47f38de96c3453a63bec01f3b6851'),wiki:'Nathan Phillips Square'})
+],
+tips:['Se neve for prioridade: um fim de semana de dezembro numa próxima viagem.']},
+
+/* ===== COMPRAS ===== */
+{id:'compras',ico:'🛍️',t:'Rota Compras',w:'Ligada a dias de chuva e promoção',b:'FLEX',bc:'r',
+intro:'HST de 13% em Ontário e o Canadá não devolve imposto a turista. Preços são do meu conhecimento ⚠️. O mercado diário já está na Rota Bairro.',
+how:[BASE,`<b>Eaton Centre:</b> Opção A da Rota Centro até Union + Linha 1 até <b>Dundas</b> ou <b>Queen</b>, ~55 a 65 min.`,`<b>Toronto Premium Outlets:</b> shuttle Daily King Tours saindo da Union (outletshuttle.ca) ou GO Milton + ônibus 21, ~1h50. Com carro fica fácil.`],
+legs:[{m:'transit',t:'Casa → Eaton Centre',f:'home',v:[],to:'eaton'},{m:'transit',t:'Casa → Best Buy (Stockyards, perto)',f:'home',v:[],to:'bb2'},{m:'driving',t:'Casa → Toronto Premium Outlets (carro)',f:'home',v:[],to:'outlets'}],
+stops:[
+S('💻','Best Buy (Stockyards, perto de casa)','Black Friday 27/nov','Best Buy, 10 Old Stock Yards Rd, Toronto','Tablet e óculos. Black Friday 27/nov, Cyber Monday 30/nov (dia do voo). Muita promoção começa semanas antes.',{k:'bb2',rq:'Best Buy, 10 Old Stock Yards Rd, Toronto, ON',ll:[43.6694,-79.4744],p:'Best Buy Canada tablets'}),
+S('🛍️','Eaton Centre + Queen St W','dia de chuva','CF Toronto Eaton Centre, 220 Yonge St, Toronto','Uniqlo, Winners, Sephora. Roupas do Derik, casaco e base MAC (preço de lista igual em todo lugar, C$45 a 55 ⚠️: espere a Black Friday na Sephora).',{k:'eaton',rq:'CF Toronto Eaton Centre, 220 Yonge St, Toronto, ON',ll:[43.6544,-79.3807],wiki:'CF Toronto Eaton Centre'}),
+S('🏬','Toronto Premium Outlets (Halton Hills)','sáb 28/nov','Toronto Premium Outlets, 13850 Steeles Ave W, Halton Hills','Domingo 11h às 19h. Tel (647) 497-8270. Conjunto Adidas, tênis, casaco.',{k:'outlets',rq:'Toronto Premium Outlets, 13850 Steeles Ave W, Halton Hills, ON',ll:[43.5970,-79.8270],wiki:'Toronto Premium Outlets',x:[['Shuttle','https://outletshuttle.ca']]}),
+S('👟','Vaughan Mills (Adidas, Nike, New Balance)','1/nov','Vaughan Mills, 1 Bass Pro Mills Dr, Vaughan','Já no dia do Wonderland.',{opt:true,ll:[43.8256,-79.5395],wiki:'Vaughan Mills'}),
+S('🧥','Casaco quente barato','Black Friday','Winners Toronto Eaton Centre','Uniqlo, Winners, Mark\'s, Sport Chek, Decathlon. Parcas Columbia/North Face C$350 a 600 na Sport Chek ⚠️. Procure warehouse sale de parcas em Vaughan.',{opt:true,ll:[43.6544,-79.3807],p:'winter parka Canada Sport Chek'}),
+S('🕶️','Óculos Meta Ray-Ban','pesquisar','Ray-Ban Meta Toronto','Modelo comum C$379 (C$303 com 20% off em alguns ⚠️). O modelo com tela: fontes divergem, pode não existir no Canadá. Veja ray-ban.com/canada.',{opt:true,ll:[43.6544,-79.3807],p:'Ray-Ban Meta glasses Canada'})
+],
+tips:['Ordem: Vaughan Mills (1/nov) → Eaton/Winners no primeiro dia de chuva → Black Friday 27/nov (tablet, MAC) → Premium Outlets 28/nov.']},
+
+/* ===== INGLES ===== */
+{id:'ingles',ico:'🗣️',t:'Rota Inglês',w:'Barato, à noite e fim de semana',b:'FLEX',bc:'r',
+intro:'Programas públicos (TDSB, LINC, CultureLink) exigem residência permanente ou refúgio, então ficam fora. Quem tem visto de turista pode estudar menos de 6 meses sem permissão de estudo (IRCC): peça à escola uma carta com datas.',
+how:[BASE,`Escolas na Linha 1: bonde 512 Eastbound até <b>St Clair West</b>, L1 até <b>Rosedale/Bloor-Yonge</b> (ILAC) ou <b>Eglinton</b> (Hansa). ~35 a 45 min ⚠️.`],
+legs:[{m:'transit',t:'Casa → ILAC Night School',f:'home',v:[],to:'ilac'},{m:'transit',t:'Casa → Hansa',f:'home',v:[],to:'hansa'},{m:'transit',t:'Casa → MidTown Toastmasters (St Clair W, perto)',f:'home',v:[],to:'tm1'},{m:'transit',t:'Casa → Deer Park Toastmasters',f:'home',v:[],to:'tm2'}],
+stops:[
+S('🏫','ILAC Night School · MELHOR CUSTO','seg a qui, 18h às 21:30','ILAC Toronto, 920 Yonge St, Toronto','<b>C$130/semana</b> (tempo parcial) ou C$190 (semi-intensivo, 4 noites). 4 semanas: C$520 por pessoa. Inscrição ~C$125 ⚠️. Tel +1 437 900 0701. Semana grátis até 31/dez/2026.',{k:'ilac',rq:'ILAC Toronto, 920 Yonge St, Toronto, ON',ll:[43.6760,-79.3890],p:'ILAC Toronto Yonge St school',x:[['Site','https://study.ilac.com/nightschool-toronto']],leg:'🚇 512 → L1 → Rosedale'}),
+S('🏫','Hansa Language Centre','noturno, começa seg','Hansa Language Centre, 51 Eglinton Ave E, Toronto','Agregadores citam C$130 a 162/semana ⚠️. Não confirmado, pergunte.',{k:'hansa',rq:'Hansa Language Centre, 51 Eglinton Ave E, Toronto, ON',ll:[43.7065,-79.3986],p:'Hansa Language Centre Toronto'}),
+S('🎤','MidTown Toastmasters (grátis)','4ª seg: 23/nov 18:45',"St. Matthew's Church, 729 St Clair Ave W, Toronto",'Clube de oratória com visita grátis, na St Clair W, perto de casa. A 2ª seg é online.',{k:'tm1',rq:"St. Matthew's Church, 729 St Clair Ave W, Toronto, ON",ll:[43.6811,-79.4273],p:'Toastmasters Toronto meeting',x:[['Clube','https://www.toastmasters.org/Find-a-Club/00001610-midtown-toastmasters']]}),
+S('🎤','Deer Park Toastmasters (grátis)','qua 18:30 ⚠️','Deer Park Library, 40 St Clair Ave E, Toronto','Perto da estação St Clair (L1). Um anúncio sugere quinta, confirme.',{k:'tm2',rq:'Deer Park Library, 40 St Clair Ave E, Toronto, ON',ll:[43.6888,-79.3925],p:'Deer Park Library Toronto'}),
+S('🎭','Improviso: Bad Dog Theatre','drop-in ~C$25','Bad Dog Theatre, 392 Spadina Ave, Toronto','Aula drop-in de 2h para iniciantes. Ótimo para perder a vergonha.',{opt:true,ll:[43.6560,-79.4000],p:'Bad Dog Theatre Toronto'}),
+S('📚','Biblioteca (rodas de conversa)','pesquisar','Toronto Public Library Dufferin St Clair, 1625 Dufferin St, Toronto','Annette St é CultureLink (só residentes). Parliament St (269 Gerrard E) teve roda drop-in sem restrição, mas longe. Cheque o calendário da TPL por "Conversation Circle".',{opt:true,ll:[43.6775,-79.4350],wiki:'Toronto Public Library',x:[['Calendário TPL','https://tpl.bibliocommons.com/v2/events']]}),
+S('💬','Meetup, italki, troca de idiomas','online','Toronto English conversation meetup','Meetup: Better English Cafe, Toronto Babel (grátis, você consome algo). italki: tutores US$ 5 a 15/h. Preply US$ 15 a 30/h. MyLanguageExchange: troca grátis.',{opt:true,noTr:true,ll:HOME.ll,p:'English conversation Toronto meetup',x:[['Meetup','https://meetup.com/find/ca--toronto/esl'],['italki','https://www.italki.com/']]})
+],
+tips:['Custo semanal estimado: ~C$330 a 370 para o casal com ILAC (2 noites), ~C$60 a 100 sem escola.','Semana-modelo: seg e qui ILAC, qua Toastmasters, sáb biblioteca ou Meetup.']}
+];
+
+const NEAR=q=>'https://www.google.com/maps/search/'+encodeURIComponent(q)+'/@'+HOME.ll[0]+','+HOME.ll[1]+',14z';
+/* ===== SALVOS DO MAPS (lugares da lista "canada" que ainda não estavam nas rotas) ===== */
+R.push({id:'salvos1',ico:'⭐',t:'Salvos do Maps · passeios e ingressos',w:'Lugares da sua lista "canada" · escolha por clima e dia',b:'SALVOS',bc:'f',noLine:true,
+intro:'Estes lugares estão na sua lista salva do Google Maps mas ainda não estavam em nenhuma rota. Cada card tem endereço, horário (do Maps, de 12/out), ingresso e o que fazer. A lista não é um caminho único: escolha por dia e clima. Os números só ordenam os cards. Preços ⚠️ não são oficiais: confirme antes de comprar.',
+how:[BASE,'Dica de encaixe: <b>Medieval Times + Exhibition Place + Coliseum (Marlies 28/nov)</b> ficam no mesmo complexo. <b>Distillery + Gooderham + Biidaasige</b> ficam no leste (junte à Rota Leste). <b>AGO + Black Market + Kensington</b> ficam colados no centro-oeste. <b>Old City Hall + Nathan Phillips + Eaton</b> ficam colados no centro.'],
+legs:[],
+stops:[
+S('⚔️','Medieval Times Dinner & Tournament','show à noite · ~2h','Medieval Times, 10 Dufferin St, Toronto, ON','🎟️ Ingresso: adulto ~C$65 + imposto e criança ~C$45 (preço de um evento de 2026 ⚠️). Revendedores mostram de ~US$53 a C$73 ⚠️. Upgrades de fila e lugar +C$16 a 30. Bebida e estacionamento à parte. Jantar de 4 pratos, torneio de cavaleiros, cavalos e falcoaria. Portas abrem 1h antes do show, duração ~2h sem intervalo, sem cancelamento. Horários variam por data: reserve com antecedência no site. Fica no Exhibition Place, junto ao Coliseum (Marlies 28/nov).',{k:'medieval',ll:[43.63265,-79.42553],svk:'DLHIn4tHJBRS8TtghQp7UQ|274.65192',pk:'medieval',x:[['Ingressos','https://www.medievaltimes.com/']]}),
+S('🎡','Exhibition Place (pin "Canadian National Exhibition")','6 a 15/nov: Royal Winter Fair','Exhibition Place, 100 Princes Blvd, Toronto, ON','O CNE (feira de verão) acontece em agosto e setembro, <b>não na sua estadia</b>. Mas o mesmo lugar recebe a <b>Royal Agricultural Winter Fair de 6 a 15/nov/2026</b> (animais, cavalos, comida canadense). 🎟️ Adulto em 2025: C$37,11 (sênior C$28, 4 a 17 anos C$24,72, menor de 3 grátis). 2026 não confirmado ⚠️. Horse Show à noite se compra à parte (Ticketmaster). Combine com Medieval Times e Coliseum.',{k:'cne',ll:[43.63305,-79.42257],svk:'NXa-6urHfZEZuOnizL5DRw|269.95694',pk:'cne',x:[['Royal Fair','https://www.royalfair.org/'],['Exhibition Place','https://www.explace.on.ca/event/royal-agricultural-winter-fair-2026/']]}),
+S('🌆','Biidaasige Park','qualquer hora · fecha 00:00','Biidaasige Park, 51 Commissioners St, Toronto, ON','🎟️ Grátis. Endereço do Maps: 51 Commissioners St, nas Port Lands (leste do centro), <b>não é Ontario Place</b>. Parque novo na orla com caminho à beira d\'água e vista do skyline e do lago. Pouca sombra, venta forte em novembro: leve casaco corta-vento. Estacionamento limitado, vá de transporte (rota exata pelo Google ⚠️). Você salvou um reel deste lugar. Combina com Distillery (Rota Leste) e Gooderham.',{k:'biid',ll:[43.64629,-79.34968],pk:'biid'}),
+S('🖼️','Art Gallery of Ontario (AGO)','ter a dom ~10:30 às 17h','Art Gallery of Ontario, 317 Dundas St W, Toronto, ON','🎟️ Adulto C$30, jovem C$15, <b>grátis até 25 anos</b> ⚠️ (confirme a regra no site, pode exigir residência em Ontário). Segunda fechado. Quarta com horário até 21h e noite grátis no 1º mês ⚠️ (fontes divergem). Última entrada ~1h antes de fechar. Maps: abre terça 10:30. Tel +1 416-979-6648. Você salvou um reel. Ao lado de Kensington e Chinatown.',{k:'ago',ll:[43.65361,-79.39251],pk:'ago',x:[['Ingressos','https://ago.ca/']]}),
+S('⚾','Rogers Centre (tour do estádio)','tour de 60 min','Rogers Centre, 1 Blue Jays Way, Toronto, ON','🎟️ Tour guiado de 60 min: C$40 por pessoa (com HST, não reembolsável). Versão pré-jogo a partir de C$80 (precisa de ingresso do jogo). Semi-privado a partir de C$300. Baixa temporada: confirme se há tours e horários no site da MLB ⚠️. Tel +1 416-341-1000. Colado na CN Tower, serve para o ângulo do vídeo do rooftop (só por fora, sem entrar).',{k:'rogers',ll:[43.64180,-79.38914],svk:'ugvpbLiz_LV7XMieEVaUgQ|210.13834',pk:'rogersc',x:[['Tours','https://www.mlb.com/bluejays/ballpark/rogers-centre-tours']]}),
+S('🏛️','Old City Hall','seg a sex ~9h às 17h ⚠️','Old City Hall, 60 Queen St W, Toronto, ON','🎟️ Entrada grátis em dias úteis ⚠️. Ainda funciona como tribunal: passa por segurança e algumas áreas ficam fechadas. Áudio-tour grátis em toronto.ca/OldCityHall. Escadaria, vitrais e murais. Maps: abre terça 8:30. Fica ao lado do Eaton Centre e Nathan Phillips (Rota Centro).',{k:'och',ll:[43.65252,-79.38172],pk:'och',x:[['Áudio-tour','https://www.toronto.ca/OldCityHall']]}),
+S('🔺','Gooderham Building (Flatiron)','só por fora','Gooderham Building, 49 Wellington St E, Toronto, ON','🎟️ Grátis, é só a fachada. Prédio triangular famoso de foto, com mural atrás. O Maps marca "temporariamente fechado" (restaurante), mas a fachada dá para fotografar sempre. Fica entre Union e o Distillery.',{k:'good',ll:[43.64838,-79.37430],pk:'good'}),
+S('🌍','Arcadia Earth Toronto','qua a dom ~12h às 19h','Arcadia Earth Toronto, 486 Front St W, Toronto, ON','🎟️ Adulto ~C$39 (sênior C$29), sem imposto ⚠️. Museu imersivo de realidade aumentada sobre o oceano, ~1h. Última entrada 1h antes de fechar. Maps: abre quarta 13h. Tel +1 877-634-3490. Fica no The Well (2º andar, Front St W), a 10 min a pé da CN Tower e do Fort York: encaixa na Rota Centro em dia de chuva.',{k:'arcadia',ll:[43.64299,-79.39698],pk:'arcadia',x:[['Ingressos','https://www.tiqets.com/en/toronto-attractions-c62492/tickets-for-arcadia-earth-toronto-entry-p1106982/']]}),
+S('🌳','Trinity Bellwoods Park','todo dia · fecha 23h','Trinity Bellwoods Park, 790 Queen St W, Toronto, ON','🎟️ Grátis. Parque grande no Queen West com esquilos, cachorros e árvores (folhas no fim já caindo). Café e brechós na Queen St W logo ao lado (Black Market Vintage fica ~2 km a leste).',{k:'trin',ll:[43.64728,-79.41372],pk:'trin'}),
+S('🏞️','Scarborough Bluffs Park','24h · dia inteiro','Scarborough Bluffs Park, Toronto, ON','🎟️ Grátis, aberto 24h. Penhascos de 90 m sobre o lago Ontário, o visual de natureza mais bonito da região. Precisa de carro ou transporte longo (~1h30 ⚠️). Ventania e frio perto do lago, calçado com tração. Melhor com o carro alugado (junte com outro dia de carro).',{k:'bluffs',ll:[43.71184,-79.23140],pk:'bluffs'}),
+S('🔭','Scenic Viewpoint (pin perto de Danforth Ave at Dawes Rd)','sem horário','Danforth Ave at Dawes Rd, Toronto, ON','Seu pin "Scenic Viewpoint" não tem nome nem endereço: o Maps diz só "endereço próximo: Danforth Ave at Dawes Rd". Provavelmente vista para o vale/skyline do leste ⚠️. Abra o pin no Maps para ver as fotos antes de ir. Fica perto da Rota Leste (Danforth).',{k:'scenic',nomap:true,alert:true,pk:'scenic'}),
+S('⛷️','Earl Bales Park (ski e tubing)','jan a mar · parque 24h','Earl Bales Park, 4169 Bathurst St, North York, ON','O parque abre sempre (grátis, 24h). A <b>estação de ski só abre em janeiro</b> (em 2026 foi de 7/jan a 22/mar), então não serve para sua estadia. 🎟️ Preços 2026 (antes do imposto): adulto C$26,91 (2h) ou C$40,65 o dia todo; 18 anos ou menos C$21,29 (2h); corda C$13,14. Tel +1 416-392-2489. Se nevar muito em nov, só morro de trenó em parques, não aqui.',{k:'earl',ll:[43.75349,-79.43228],pk:'earlb',no:true}),
+S('🚶','Go Tours Canada: Distillery District','tour a pé · 1h','Go Tours Canada, 11 Gristmill Lane, Toronto, ON','🎟️ Tour histórico a pé ~US$21 por adulto ⚠️ (moeda e valor não confirmados), gorjeta à parte. Café da manhã do Distillery sai por ~US$54. Tel +1 416-677-3831. Maps: abre quarta 11h. Guia explica a história do bairro: encaixa na Rota Leste.',{k:'gotour',ll:[43.64987,-79.36145],svk:'_fpOVLcbDa6oat_40fKbQA|183.98756',pk:'gotour'}),
+S('☕','Balzac\'s Coffee (Distillery)','café','Balzac\'s Distillery District, 1 Trinity St, Toronto, ON','Café-ícone em prédio histórico, perfeito para o frio. Tel +1 416-207-1709. Você salvou um reel. Fica dentro do Distillery (Rota Leste).',{k:'balz',ll:[43.64978,-79.35907],pk:'balz'}),
+S('🍺','Elephant & Castle','pub · almoço ou jantar','Elephant & Castle, 212 King St W, Toronto, ON','Pub inglês clássico perto do centro, aberto a partir das 11h (Maps: abre terça 11h). Tel +1 416-598-4455. A 5 min a pé da King & John (bonde vermelho).',{k:'elephant',ll:[43.64763,-79.38644],svk:'5MRFAt_v_gG1OxgIxoTmSg|205.08484',pk:'aw'}),
+S('🌉','Sir Isaac Brock Bridge (ponte da Bathurst)','24h','Sir Isaac Brock Bridge, 9 Bathurst St, Toronto, ON','Grátis. É a ponte da Bathurst St junto ao Fort York: a mesma região dos candidatos à foto da CN Tower atrás dos trilhos (Rota Centro, parada 8). Posição aproximada ⚠️.',{k:'brock',ll:[43.6385,-79.4017],pk:'brock'}),
+S('🧗','Activate Toronto (Stock Yards)','abre até 22h','Activate Toronto Stock Yards, 30 Weston Rd, Toronto, ON','Jogos de sala em equipe (19 salas, ~75 min, mínimo 3 pessoas, reserva online). 🎟️ Preço do Stockyards não achei ⚠️ (referência de 2020 em outra unidade: ~US$25). Maps: aberto até 22h. Tel +1 647-483-4799. Fica no Stockyards, perto do Best Buy e do Walmart (Parte 2 da Rota Bairro). Bom para chuva.',{k:'activate',ll:[43.67310,-79.46884],svk:'A4Yx4YNXFHIcHdOfoaOuwQ|76.536156',pk:'activate'}),
+S('🥊','Toronto Boxing Academy & Fitness (4,8)','abre ter 9h','Toronto Boxing Academy & Fitness, Toronto, ON','Academia de boxe que você salvou para o Derik. Tel +1 647-748-2866. Aparece no ClassPass. Preços não achei ⚠️ (referência de academias de luta em Toronto: ~C$27 a 30 a aula avulsa). O pin não mostra endereço: abra no Maps, a posição aqui é aproximada. Compare com o WOLF (Rota Bairro) por distância de casa.',{k:'boxing',ll:[43.6560,-79.4290],pk:'box',alert:true})
+],
+tips:['Sugestão de ordem por clima: <b>sol</b> = Biidaasige, Trinity Bellwoods, Scarborough Bluffs (carro), Gooderham, Brock Bridge. <b>Chuva</b> = AGO, Arcadia Earth, Medieval Times, Activate, Rogers Centre tour.','Moeda: tudo em CAD, salvo onde indicado. HST de 13% é somado no caixa.']});
+
+R.push({id:'salvos2',ico:'🛍️',t:'Salvos do Maps · compras, comida e inglês',w:'Lojas, mercados e escolas da sua lista',b:'SALVOS',bc:'f',noLine:true,
+intro:'Compras, comida e escolas de inglês da sua lista "canada" que não estavam nas rotas. As lojas de rede (Winners, Marshalls, The Ordinary, MAC etc.) têm várias unidades: o botão "mais perto de casa" abre a mais próxima do Airbnb. Suas notas: Winners e Marshalls para roupa de marca ponta de estoque barata, Black Market Vintage para brechó de qualidade.',
+how:[BASE,'Compras no centro (Winners, Eaton Centre, UNIQLO Union, MAC): junte à Rota Centro e Rota Compras. Yorkdale: Linha 1 até Yorkdale, ~1h daqui ⚠️.'],
+legs:[],
+stops:[
+S('👗','Winners / HomeSense (sua nota: roupa de marca ponta de estoque)','compras','Winners, Toronto, ON','Várias lojas. Procure a mais perto de casa. Marcas por 30 a 60% menos do que na loja, estoque muda toda semana ⚠️ (regra geral da rede). Funciona bem para casaco e roupas do Derik.',{nomap:true,noTr:true,near:'Winners HomeSense',pk:'winners'}),
+S('👚','Marshalls & HomeSense (roupa de marca baratas)','compras','Marshalls, Toronto, ON','Mesma lógica do Winners: marca com desconto, estoque que gira. Compare os dois no mesmo dia.',{nomap:true,noTr:true,near:'Marshalls',pk:'marsh'}),
+S('🧥','Black Market Vintage Upstairs (sua nota: brechó de qualidade)','abre ter 11h','Black Market Vintage Upstairs, 347 Queen St W, Toronto, ON','Brechó de roupas vintage no 2º andar da Queen St W. Tel +1 416-599-5858. Maps: abre terça 11h. Queen West tem vários brechós em sequência: dá para fazer a rua a pé. Fica perto da AGO e do Kensington.',{k:'bmv',ll:[43.64937,-79.39251],pk:'bmv'}),
+S('♻️','Value Village (artigos usados)','compras','Value Village, Toronto, ON','Loja de usados (roupa, casacos, utensílios) bem barata. Várias unidades: use o botão para a mais perto. Boa para casaco de inverno e coisas da casa.',{nomap:true,noTr:true,near:'Value Village',pk:'vv'}),
+S('👕','UNIQLO Union Station','compras','UNIQLO Union Station, Toronto, ON','Loja pequena na saída da Union (nota 3,5). O UNIQLO do Eaton Centre é maior (nota 4,4, já na Rota Compras). Básicos, heattech e jaquetas leves.',{nomap:true,noTr:true,near:'UNIQLO',pk:'uniqlo'}),
+S('🖥️','Canadian Outlet (eletrônicos, 4,6) e Best Buy Express','eletrônicos','Canadian Outlet Toronto electronics','Outlet de eletrônicos (tablet, acessórios) com nota 4,6. Tel (289) 948-1810. Maps: abre terça 10h. O pin do Maps não resolveu o endereço, então a posição é aproximada ⚠️. O Best Buy Express é uma versão menor do Best Buy (Rota Compras).',{k:'canout',ll:[43.7245,-79.3711],pk:'canout',alert:true}),
+S('💄','The Ordinary, MAC, Bath & Body Works, Ardene','beleza','The Ordinary, Toronto, ON','Skincare (The Ordinary x3), maquiagem (MAC x2), cosméticos (Bath & Body Works) e acessórios (Ardene). Todas redes: botões para a mais perto. Na Black Friday (27/nov) costumam ter 30 a 50% off em lojas como Sephora e Bath & Body Works ⚠️.',{nomap:true,noTr:true,near:'The Ordinary',pk:'ordinary',x:[['MAC',NEAR('MAC Cosmetics')],['Bath & Body Works',NEAR('Bath & Body Works')],['Ardene',NEAR('Ardene')]]}),
+S('🍜','PAT Central (mercearia coreana)','aberto até 21h','PAT Central, 675 Bloor St W, Toronto, ON','Mercado coreano no Koreatown: macarrão, kimchi, snacks, comida pronta. Tel +1 416-532-2961. Fica em Bloor St W, Linha 2 estação Christie ou Bathurst.',{k:'pat',ll:[43.66381,-79.41627],svk:'hMN8GxZj2gSzHZRO53umVg|150.60567',pk:'pat'}),
+S('🛍️','Yorkdale Shopping Centre','abre ter 10h','Yorkdale Shopping Centre, 3401 Dufferin St, North York, ON','O maior shopping de luxo e marcas de Toronto (Apple, Nike, Lululemon, Zara etc.). Tel +1 416-789-3261. Linha 1 até Yorkdale. Em novembro lota nos fins de semana.',{k:'yorkdale',ll:[43.72511,-79.45281],svk:'6t5dYhmO4Wn689_C7gXxew|203.30495',pk:'york'}),
+S('🍔','A&W','fast food','A&W, Toronto, ON','Hambúrguer canadense, boa opção rápida e barata. Rede: botão para a mais perto.',{nomap:true,noTr:true,near:'A&W',pk:'aw2'}),
+S('🏫','Oxford International Toronto English School (4,7)','abre ter 8:30','Oxford International Toronto English School, 111 Peter St, Toronto, ON','Escola de inglês no Entertainment District (Peter St #210), ao lado da King West. Tel +1 416-542-1626. Preço não achei ⚠️: peça orçamento de 4 semanas, noturno, e compare com a ILAC (C$130/semana, Rota Inglês).',{k:'oxford',ll:[43.64804,-79.39271],svk:'tB_jLlTDJENgakPojrr8nQ|76.15988',pk:'oxford'}),
+S('🎓','George Brown College (inglês)','aberto até 22h','George Brown College, 341 King St E, Toronto, ON','Faculdade com cursos de idioma (ramal 4826). Tel +1 416-415-5000. Cursos regulares costumam exigir permissão de estudo: peça uma carta de "sem permissão" ⚠️ ou um curso curto.',{k:'gbc',ll:[43.65172,-79.36557],svk:'FkOeCx6WH4_KiWSg7MdKJQ|195.42981',pk:'gbc'}),
+S('📚','Overland Learning Centre (North York)','aberto até 21h','Overland Learning Centre, 55 Overland Dr, North York, ON','Centro educacional (TDSB), longe: ~1h30 daqui ⚠️. Tel +1 416-395-5080. Programas públicos de inglês exigem residência: pergunte.',{k:'overland',ll:[43.73176,-79.34841],svk:'GxVlur7XvNHEIrkcUFGe7g|208.79573',pk:'gbc'}),
+S('📖','Bibliotecas: Runnymede e Annette Street','rodas de conversa','Toronto Public Library Runnymede Branch, 2178 Bloor St W, Toronto, ON','<b>Runnymede</b> (2178 Bloor St W, tel +1 416-393-7697, abre terça 9h) e <b>Annette Street</b> (145 Annette St, tel +1 416-393-7692, abre terça 12:30, é CultureLink: só residentes). A Junction Triangle já está na Rota Bairro. Veja o calendário "Conversation Circle" da TPL.',{k:'runny',ll:[43.65181,-79.47392],svk:'bAvY865UgzU-EeEtL00dVQ|21.592966',pk:'library',x:[['Annette St',MQ('Toronto Public Library Annette Street Branch, 145 Annette St, Toronto, ON')]]}),
+S('🗣️','WoodGreen conversation circles (815 Danforth #300)','não existe mais','WoodGreen conversation circles Toronto','O Maps diz que o endereço salvo (815 Danforth Ave #300) <b>não existe mais</b>. O post do WoodGreen sobre as rodas de conversa para recém-chegados: woodgreen.org (blog). Veja também a Rota Inglês.',{nomap:true,noTr:true,no:true,pk:'oxford',x:[['Post','https://www.woodgreen.org/blog/conversation-circles-create-a-welcoming-tiny-toronto-for-newcomers']]})
+],
+tips:['Black Friday é 27/nov (sexta). Ordem de compra: ver preço na loja antes, comprar na semana de 23 a 27/nov.']});
+
+
+// ---------- COORDENADAS REAIS (Google Maps) + FACHADAS (Street View) ----------
+const GEO={
+'Távora Foods, 1625 St Clair Ave W, Toronto':[43.67474,-79.45671],
+'Samba Brazil Eatery, 1646 St Clair Ave W, Toronto, ON':[43.67499,-79.45732],
+'WOLF Athletic Academy, 1287 St Clair Ave W, Toronto':[43.67674,-79.44777],
+'Tim Hortons, 1176 St Clair Ave W, Toronto':[43.67810,-79.44363],
+'Earlscourt Park, 1200 Lansdowne Ave, Toronto':[43.67235,-79.44928],
+'Sabor Carioca, 1702 St Clair Ave W, Toronto':[43.67456,-79.45925],
+'Shoppers Drug Mart, 620 Keele St, Toronto':[43.67173,-79.46768],
+'Best Buy, 10 Old Stock Yards Rd, Toronto':[43.66922,-79.47151],
+'Walmart Supercentre, 2525 St Clair Ave W, Toronto':[43.66805,-79.48458],
+'Toronto Public Library Junction Triangle, 305 Campbell Ave, Toronto':[43.66580,-79.44973],
+'Avis, 3193 Dundas St W, Toronto, ON':[43.66540,-79.47648],
+'Vaughan Mills, 1 Bass Pro Mills Dr, Vaughan, ON':[43.82586,-79.53914],
+"Canada's Wonderland, 1 Canada's Wonderland Dr, Vaughan, ON":[43.84236,-79.54122],
+"Behemoth, 1 Canada's Wonderland Drive, Vaughan":[43.83902,-79.54066],
+"Backlot Stunt Coaster, 1 Canada's Wonderland Drive, Vaughan":[43.83911,-79.54164],
+"Yukon Striker, 4 Canada's Wonderland Dr, Vaughan":[43.84007,-79.54251],
+'Wonder Mountain, Vaughan, ON L4H 2E8':[43.84197,-79.54208],
+"Leviathan, 1 Canada's Wonderland Drive, Vaughan":[43.84449,-79.54233],
+"Canada's Wonderland Halloween Haunt, Vaughan":[43.84236,-79.54122],
+'Tim Hortons, 1 Bass Pro Mills Dr, Vaughan, ON':[43.82569,-79.54230],
+'Union Station, 65 Front St W, Toronto, ON':[43.64548,-79.38083],
+'CN Tower, 290 Bremner Blvd, Toronto, ON':[43.64257,-79.38706],
+"Ripley's Aquarium of Canada, 288 Bremner Blvd, Toronto, ON":[43.64218,-79.38660],
+'Roundhouse Park, 255 Bremner Blvd, Toronto, ON':[43.64127,-79.38530],
+'King St W & John St, Toronto, ON':[43.64661,-79.38975],
+'KOST, 80 Blue Jays Way, Toronto, ON':[43.64521,-79.39238],
+'Clarence Square, Spadina Ave & Wellington St W, Toronto, ON':[43.64379,-79.39332],
+'Fort York National Historic Site, 250 Fort York Blvd, Toronto, ON':[43.63924,-79.40414],
+'Nathan Phillips Square, 100 Queen St W, Toronto, ON':[43.65271,-79.38341],
+'Yonge-Dundas Square, 1 Dundas St E, Toronto, ON':[43.65607,-79.38017],
+'Roundhouse Park, 255 Bremner Blvd, Toronto':[43.64127,-79.38530],
+'CN Tower, 290 Bremner Blvd, Toronto':[43.64257,-79.38706],
+'Jack Layton Ferry Terminal, 9 Queens Quay W, Toronto':[43.64022,-79.37568],
+'Tim Hortons, 65 Front St W, Toronto, ON':[43.64520,-79.38159],
+'Tim Hortons Brookfield Place, 181 Bay St, Toronto, ON':[43.64718,-79.37732],
+'Hockey Hall of Fame, 30 Yonge St, Toronto, ON':[43.64700,-79.37730],
+'Scotiabank Arena, 40 Bay St, Toronto, ON':[43.64343,-79.37908],
+'Scotiabank Arena, 40 Bay St, Toronto':[43.64343,-79.37908],
+'Coca-Cola Coliseum, 100 Princes Blvd, Toronto, ON':[43.63490,-79.41532],
+'Varsity Arena, 299 Bloor St W, Toronto, ON':[43.66720,-79.39780],
+'Real Sports Bar and Grill, 15 York St, Toronto':[43.64270,-79.38090],
+'Table Rock Welcome Centre, 6650 Niagara Pkwy, Niagara Falls, ON':[43.07944,-79.07899],
+'Journey Behind the Falls, 6650 Niagara Pkwy, Niagara Falls, ON':[43.07952,-79.07908],
+'Queen Victoria Park, Niagara Falls, ON':[43.07929,-79.07964],
+'Oakes Garden Theatre, 5825 River Rd, Niagara Falls, ON':[43.09041,-79.07210],
+'Niagara City Cruises, 5920 Niagara Pkwy, Niagara Falls, ON':[43.08749,-79.07212],
+'Skylon Tower, 5200 Robinson St, Niagara Falls, ON':[43.08514,-79.07969],
+'Clifton Hill, Niagara Falls, ON':[43.09145,-79.07490],
+'Great Canadian Midway, 4848 Clifton Hill, Niagara Falls, ON':[43.09094,-79.07451],
+'Niagara Speedway, Clifton Hill, Niagara Falls ON':[43.09091,-79.07677],
+'Niagara SkyWheel, 4960 Clifton Hill, Niagara Falls, ON':[43.09130,-79.07503],
+'Dufferin Islands, Niagara Falls ON':[43.06830,-79.07067],
+'Whirlpool Aero Car, 3850 Niagara Pkwy, Niagara Falls':[43.11802,-79.06882],
+'Tim Hortons, 4950 Clifton Hill, Niagara Falls, ON':[43.09132,-79.07546],
+'Casa Loma, 1 Austin Terrace, Toronto, ON':[43.67810,-79.40942],
+'Casa Loma, 1 Austin Terrace, Toronto':[43.67810,-79.40942],
+"University College, 15 King's College Cir, Toronto, ON":[43.66283,-79.39517],
+'Ontario Legislative Building, 111 Wellesley St W, Toronto, ON':[43.66262,-79.39102],
+"Royal Ontario Museum, 100 Queen's Park, Toronto, ON":[43.66766,-79.39470],
+'Cumberland St & Hazelton Ave, Toronto, ON':[43.67033,-79.39110],
+'Park Hyatt Toronto, 4 Avenue Rd, Toronto':[43.66920,-79.39462],
+'Riverdale Farm, 201 Winchester St, Toronto, ON':[43.66697,-79.36173],
+'Riverdale Farm, 201 Winchester St, Toronto':[43.66697,-79.36173],
+'Parliament St & Carlton St, Toronto, ON':[43.66422,-79.36815],
+'Riverdale Park East, 550 Broadview Ave, Toronto, ON':[43.67183,-79.35498],
+'Distillery District, 55 Mill St, Toronto, ON':[43.65025,-79.35913],
+'Tommy Thompson Park, 1 Leslie St, Toronto':[43.62684,-79.33072],
+'Tim Hortons, 91 Danforth Ave, Toronto, ON':[43.67612,-79.35840],
+'High Park Zoo, 1873 Bloor St W, Toronto, ON':[43.64277,-79.46143],
+'Grenadier Pond, Toronto, ON':[43.64341,-79.46842],
+'Toronto Zoo, 2000 Meadowvale Rd, Toronto, ON':[43.81962,-79.18450],
+"Queen's Park, Toronto":[43.66262,-79.39102],
+'Cabbagetown, Toronto':[43.66422,-79.36815],
+'Prospect Cemetery, 1450 St Clair Ave W, Toronto, ON':[43.67712,-79.45159],
+'High Park, 1873 Bloor St W, Toronto, ON':[43.64600,-79.46400],
+'Cedarvale Park, 443 Arlington Ave, Toronto':[43.69231,-79.43071],
+"University of Toronto Front Campus, 27 King's College Cir, Toronto":[43.66170,-79.39570],
+'Mount Pleasant Cemetery, 375 Mount Pleasant Rd, Toronto':[43.69508,-79.38532],
+'Evergreen Brick Works, 550 Bayview Ave, Toronto':[43.68386,-79.36485],
+'Bickford Park, 400 Grace St, Toronto':[43.66010,-79.41700],
+'Snow Valley Ski Resort, Barrie':[44.45600,-79.58900],
+'Kelso Conservation Area, Milton':[43.51200,-79.94900],
+'Blue Mountain Resort, Collingwood ON':[44.50200,-80.31700],
+'South Simcoe Railway, Tottenham ON':[44.02000,-79.80000],
+'Nathan Phillips Square, Toronto':[43.65271,-79.38341],
+'Best Buy, 10 Old Stock Yards Rd, Toronto, ON':[43.66922,-79.47151],
+'CF Toronto Eaton Centre, 220 Yonge St, Toronto, ON':[43.65415,-79.38079],
+'Toronto Premium Outlets, 13850 Steeles Ave W, Halton Hills, ON':[43.59700,-79.82700],
+'Vaughan Mills, 1 Bass Pro Mills Dr, Vaughan':[43.82586,-79.53914],
+'Winners Toronto Eaton Centre':[43.65415,-79.38079],
+'Ray-Ban Meta Toronto':[43.65415,-79.38079],
+'ILAC Toronto, 920 Yonge St, Toronto, ON':[43.67412,-79.38895],
+'Hansa Language Centre, 51 Eglinton Ave E, Toronto, ON':[43.70549,-79.39724],
+"St. Matthew's Church, 729 St Clair Ave W, Toronto, ON":[43.68109,-79.42730],
+'Deer Park Library, 40 St Clair Ave E, Toronto, ON':[43.68860,-79.39243],
+'Bad Dog Theatre, 392 Spadina Ave, Toronto':[43.65552,-79.39947],
+'Toronto Public Library Dufferin St Clair, 1625 Dufferin St, Toronto':[43.67670,-79.43840]
+};
+const SV={
+'Távora Foods, 1625 St Clair Ave W, Toronto':'FKBDSJDQQhiDlJoKWTKOug|166.81865',
+'Samba Brazil Eatery, 1646 St Clair Ave W, Toronto, ON':'qrGFdAwUY16o9v8y0H4p0w|12.853491',
+'Tim Hortons, 1176 St Clair Ave W, Toronto':'3_RYB3Ivd9v0C24cNJi0BQ|19.69536',
+'Sabor Carioca, 1702 St Clair Ave W, Toronto':'1EttTpPoKh4TdSV696U1GA|323.55435',
+'Shoppers Drug Mart, 620 Keele St, Toronto':'vMJuFRj_EubUHjP9fdZNkw|243.99896',
+'Best Buy, 10 Old Stock Yards Rd, Toronto':'6BcN-qhh5BKzbpDYpnrdEQ|219.19063',
+'Walmart Supercentre, 2525 St Clair Ave W, Toronto':'8ttvZhwZqOD35OIV6yhluw|296.41736',
+'Avis, 3193 Dundas St W, Toronto, ON':'EwSH3caYUSpVUoaQ4GYKTA|26.923944',
+'KOST, 80 Blue Jays Way, Toronto, ON':'k1RCvrteCIQf3TY_aKC3-Q|253.12375',
+'Best Buy, 10 Old Stock Yards Rd, Toronto, ON':'6BcN-qhh5BKzbpDYpnrdEQ|219.19063',
+'ILAC Toronto, 920 Yonge St, Toronto, ON':'CbHWT0DSa2RAuvaTkd8J1g|248.55412',
+"St. Matthew's Church, 729 St Clair Ave W, Toronto, ON":'RS4t7U2meEqQkM8BNdo2yQ|203.68472',
+'Deer Park Library, 40 St Clair Ave E, Toronto, ON':'Dp7FzZF00eq8vYmJglXy9w|42.384323',
+'Bad Dog Theatre, 392 Spadina Ave, Toronto':'vUAkwGYDCCu2waSDo8aF_A|263.63358',
+'Toronto Public Library Junction Triangle, 305 Campbell Ave, Toronto':'KfPJlVfd94fLmqaw4_wtBg|88.79416',
+'Tim Hortons, 1 Bass Pro Mills Dr, Vaughan, ON':'zKIkY3IR_pYBgSvtzJkwjw|131.73909',
+'Tim Hortons, 65 Front St W, Toronto, ON':'0bbpRdBIDNfUTy2DRpaNoQ|192.2784',
+'Tim Hortons Brookfield Place, 181 Bay St, Toronto, ON':'NiCBVY_ACJrFbVkwwNfblg|222.43571',
+'Tim Hortons, 91 Danforth Ave, Toronto, ON':'7dxDCk33utg9R0DpsHmiKw|129.50452',
+"Canada's Wonderland, 1 Canada's Wonderland Dr, Vaughan, ON":'ArZKen8kDP0Lz_lthLXQVA|44.211494'
+};
+const PHX={
+'WOLF Athletic Academy, 1287 St Clair Ave W, Toronto':'https://lh3.googleusercontent.com/grass-cs/AABkmLd0RgXWoRI_J2H36H4UetXSURgoRU0n2fyCSV018qAEY3SnpuLcprHDxZhTMqRSaD1py2BxJ-SXo7-93l4VTS7rNrZdIFQfV4vmngjCFaHJQu_WkH6VeApOX5sfkCjWruvgy4dm=w640-h420-k-no',
+'Tim Hortons, 4950 Clifton Hill, Niagara Falls, ON':'https://lh3.googleusercontent.com/grass-cs/AABkmLdSsEqlCsCFIbFpTcWiDA_FMBZ3sk2xa62e6QYlCSX_XY4cu5-5Fv15DAy4ljFTKFc5VOk-W7rxYKKWYyac4sNPGmtJzGELJwrLN4rM66Cg_xr38zwvZZ9mj5LJy6pVHr1ELPXsUw=w640-h420-k-no'
+};
+const SVU=v=>{const a=v.split('|');return 'https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid='+a[0]+'&cb_client=maps_sv.tactile&w=640&h=420&yaw='+a[1]+'&pitch=0&thumbfov=100';};
+R.forEach(r=>r.stops.forEach(s=>{const k=s.rq||s.q;if(GEO[k])s.ll=GEO[k];if(SV[k]){s.sv=SVU(SV[k]);}if(s.svk)s.sv=SVU(s.svk);if(PHX[k])s.ph=PHX[k];}));
+
+
+// numeracao: nao-opcionais 1..n, opcionais A,B,C
+R.forEach(r=>{let n=0,o=0;r.stops.forEach(s=>{if(s.opt){s.num=String.fromCharCode(65+o++);}else{s.num=String(++n);}});r.byKey={};r.stops.forEach(s=>{if(s.k)r.byKey[s.k]=s;});});
+
+// ---------- RESPOSTAS ----------
+
+// ---------- ROUTE LINKS ----------
+function addr(r,key){if(key==='home')return HOME.addr;const s=r.byKey[key];if(!s)return null;return s.rq||s.q;}
+function legURL(r,l){const parts=[addr(r,l.f)].concat((l.v||[]).map(k=>addr(r,k)),[addr(r,l.to)]);if(parts.some(p=>!p))return null;return 'https://www.google.com/maps/dir/'+parts.map(enc).join('/')+'/data=!4m2!4m1'+MODE[l.m];}
+
+// ---------- SVG MAP ----------
+function esc(s){return String(s).replace(/<[^>]+>/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function svgMap(r){
+const main=r.stops.filter(s=>!s.opt);
+const st=[{i:'🏠',n:'Airbnb',h:'79 Ford St',num:'0'}].concat(main.slice(0,12));
+const cols=3,W=980,cw=W/cols,rh=170;const rows=Math.ceil(st.length/cols);const H=rows*rh+90;
+const pos=st.map((s,k)=>{const row=Math.floor(k/cols);let c=k%cols;if(row%2===1)c=cols-1-c;return {x:cw*c+cw/2,y:70+row*rh+rh/2-10+(c%2?14:-8)};});
+let o='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">';
+o+='<defs><pattern id="g'+r.id+'" width="26" height="26" patternUnits="userSpaceOnUse"><path d="M26 0H0V26" fill="none" stroke="#e6dcc0" stroke-width="1"/></pattern></defs><rect width="'+W+'" height="'+H+'" fill="#f3ead2"/><rect width="'+W+'" height="'+H+'" fill="url(#g'+r.id+')"/>';
+o+='<rect width="'+W+'" height="46" fill="#14213d"/><text x="16" y="30" fill="#fff" font-size="19" font-weight="700" font-family="Georgia,serif">'+esc(r.ico+' MAPA ILUSTRADO · '+r.t)+'</text><text x="'+(W-16)+'" y="30" fill="#e0a526" font-size="12" text-anchor="end">esquemático, fora de escala · sai de 79 Ford St</text>';
+const deco=['🌳','🌲','🍁','🏠','🌳','🚏'];for(let k=0;k<14;k++){const dx=(k*173+40)%W,dy=60+((k*97)%(H-90));o+='<text x="'+dx+'" y="'+dy+'" font-size="'+(16+(k%3)*4)+'" opacity=".3">'+deco[k%deco.length]+'</text>';}
+let d='M'+pos[0].x+' '+pos[0].y;for(let k=1;k<pos.length;k++){const a=pos[k-1],b=pos[k];const mx=(a.x+b.x)/2,my=(a.y+b.y)/2+(k%2?-26:26);d+=' Q'+mx+' '+my+' '+b.x+' '+b.y;}
+o+='<path d="'+d+'" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" opacity=".9"/><path d="'+d+'" fill="none" stroke="#c8102e" stroke-width="4" stroke-dasharray="3 10" stroke-linecap="round"/>';
+for(let k=1;k<pos.length;k++){const a=pos[k-1],b=pos[k];const mx=(a.x+b.x)/2,my=(a.y+b.y)/2+(k%2?-13:13);const leg=st[k].leg||'';if(leg){const t=esc(leg.length>34?leg.slice(0,33)+'…':leg);o+='<rect x="'+(mx-t.length*3.2-6)+'" y="'+(my-11)+'" width="'+(t.length*6.4+12)+'" height="20" rx="10" fill="#fff" stroke="#14213d" stroke-width="1"/><text x="'+mx+'" y="'+(my+4)+'" text-anchor="middle" font-size="10.5" fill="#14213d">'+t+'</text>';}}
+st.forEach((s,k)=>{const p=pos[k];o+='<circle cx="'+p.x+'" cy="'+p.y+'" r="30" fill="#fff" stroke="#14213d" stroke-width="3"/><circle cx="'+p.x+'" cy="'+p.y+'" r="26" fill="#fffdf8"/><text x="'+p.x+'" y="'+(p.y+10)+'" text-anchor="middle" font-size="28">'+s.i+'</text><circle cx="'+(p.x-24)+'" cy="'+(p.y-24)+'" r="11" fill="#c8102e" stroke="#fff" stroke-width="2"/><text x="'+(p.x-24)+'" y="'+(p.y-20)+'" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">'+s.num+'</text>';
+const nm=esc(s.n.length>26?s.n.slice(0,25)+'…':s.n);const hh=esc((s.h||'').length>28?(s.h||'').slice(0,27)+'…':(s.h||''));
+o+='<rect x="'+(p.x-92)+'" y="'+(p.y+36)+'" width="184" height="'+(hh?38:22)+'" rx="8" fill="#14213d"/><text x="'+p.x+'" y="'+(p.y+51)+'" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">'+nm+'</text>'+(hh?'<text x="'+p.x+'" y="'+(p.y+67)+'" text-anchor="middle" font-size="10.5" fill="#e0a526">'+hh+'</text>':'');});
+return o+'</svg>';}
+
+// ---------- RENDER ----------
+const root=document.getElementById('routes'),nav=document.getElementById('nav');
+R.forEach((r,ri)=>{
+
+let h='<section class="route pane" id="p-'+r.id+'"><div class="rh"><span class="ico">'+r.ico+'</span><div><h3>'+r.t+'</h3><p>'+r.w+'</p></div><span class="badge '+(r.bc||'')+'">'+r.b+'</span></div><div class="rb"><p style="margin:2px 0 8px">'+r.intro+'</p>';
+if(r.compare)h+='<div class="box warn"><b>🗓️ 7/nov ou 14/nov?</b><table><tr><th></th><th>Sáb 7/nov · 12°/4° ⛅</th><th>Sáb 14/nov · 10°/5° ☁️ ⭐</th></tr><tr><td>Festival of Lights</td><td>❌ ainda não</td><td>✅ abre em 14/nov (17h à meia-noite)</td></tr><tr><td>Fogos 20h</td><td>❌ nada</td><td>✅ sextas e sábados, 5 min ⚠️</td></tr><tr><td>Iluminação das cataratas</td><td>padrão (16:30), vermelho/laranja às 22h</td><td>padrão + luzes de Natal</td></tr><tr><td>Gente</td><td>menos</td><td>mais (abertura e sábado)</td></tr></table><p style="margin:6px 0 0">Fontes: <a href="https://www.niagarafallstourism.com/WFOL/">Niagara Falls Tourism</a>, <a href="https://www.niagaraparks.com/events/event/falls-illumination">Falls Illumination</a>.</p></div>';
+if(r.decision)h+='<div class="box warn">'+r.decision+'</div>';
+h+='<div class="how"><b>🚏 Como ir, saindo do Airbnb</b><ol>'+r.how.map(x=>'<li>'+x+'</li>').join('')+'</ol></div>';
+h+='<div class="legs"><div class="lt">🧭 Rotas no Google Maps (cada trecho no modo certo)</div>'+r.legs.map(l=>{const u=legURL(r,l);if(!u)return '';return '<div class="leg '+(l.m==='transit'?'tr':l.m==='driving'?'dr':'')+'"><span class="ic">'+MIC[l.m]+'</span><span class="tx">'+l.t+(l.n?'<small>'+l.n+'</small>':'')+'</span><a href="'+u+'" target="_blank">Abrir</a></div>';}).join('')+'</div>';
+h+='<div class="tabs"><button class="on" data-t="real" data-r="'+r.id+'">🗺️ Mapa real (Norte ↑)</button><button data-t="svg" data-r="'+r.id+'">🎨 Esquema</button></div><div class="mapbox"><div class="lmap" id="lm-'+r.id+'"></div><div id="svg-'+r.id+'" style="display:none">'+svgMap(r)+'</div><div class="mapmsg" id="mm-'+r.id+'"></div></div>';
+h+='<div class="grid">';
+r.stops.forEach((s,si)=>{
+const tr=s.noTr?'':'<a class="tr" href="'+DQ(s.rq||s.q,(r.id==='wonder'||r.id==='niagara')&&!s.opt?'driving':'transit')+'" target="_blank">'+((r.id==='wonder'||r.id==='niagara')&&!s.opt?'🚗':'🚇')+' de casa</a>';
+h+='<div class="tile'+(s.alert?' alert':'')+(s.no?' no':'')+(s.opt?' opt':'')+'"><div class="ph" data-sid="'+ri+'|'+si+'"><span class="num'+(s.opt?' o':'')+'">'+s.num+'</span><span>'+s.i+'</span><span class="fac" style="display:none">📷 fachada</span></div><div class="tb"><div class="n">'+s.n+(s.opt?' <small style="font:600 11px system-ui;color:#6b7280">(opcional)</small>':'')+'</div><div class="h">🕐 '+s.h+'</div>'+(s.leg?'<div class="lg">'+s.leg+'</div>':'')+'<div class="dd">'+s.d+'</div><div class="b"><a href="'+MQ(s.rq||s.q)+'" target="_blank">📍 Maps</a>'+tr+'<a class="ph2" href="'+FQ(s.p||s.n+' Toronto')+'" target="_blank">📸 Fotos</a>'+(s.tim?'<a class="ex" href="'+TIM(s.ll)+'" target="_blank">☕ Tim perto</a>':'')+(s.near?'<a class="tr" href="'+NEAR(s.near)+'" target="_blank">📍 mais perto de casa</a>':'')+(s.x||[]).map(x=>'<a class="ex" href="'+x[1]+'" target="_blank">'+x[0]+'</a>').join('')+'</div></div></div>';});
+h+='</div>';
+if(r.tips&&r.tips.length)h+='<ul class="tips">'+r.tips.map(t=>'<li>'+t+'</li>').join('')+'</ul>';
+root.insertAdjacentHTML('beforeend',h+'</div></section>');});
+
+const PH={cn:'00/c5/bd/00c5bd77cca38ee381e034b5f21632b9 e9/43/73/e94373c2568ed625cb78182f0f7e0a08 12/c2/3f/12c23f9898558a5bd929a97a3ab39c4b',sabor:'60/32/5c/60325c1f4287d89a158a64004ed7ede4 2d/88/f0/2d88f0c420f76a0aaa950d9c71f83966 31/c5/c3/31c5c3e41dfd49f7357ca079e984a987',samba:'34/66/73/346673a66dc7c1ccf0340f84ddda8907 54/a8/fc/54a8fc7f7943fad596b0ec828c99b53a e0/2a/66/e02a666ca1f58b69b42eae66bf060254',yukon:'ee/59/3a/ee593a4acb22ffa7c174733a93a60d01 d7/f6/50/d7f650f4112d13b3e243f9216d5534c1 20/97/5f/20975f78a135c4948df2f671194a3963',yd:'78/c2/d2/78c2d21c621e375fdc838d55811eaea1 2c/6c/a1/2c6ca1a59e91838c3fd9280caeb824f0 3e/3e/b7/3e3eb719064d3ce2350686d1e08ed524',leviathan:'57/9f/51/579f511e306ef724a3a5623f78145ee9 4c/da/7c/4cda7c20eab8e731a4336d9ba6f40ce2 0d/f2/62/0df262ffbbd924ba8a453c3ee23eb1ac',rpark:'cf/fc/35/cffc35cf96359ecd141f5db383de58c9 62/e6/f0/62e6f0119959e30f8cba9a4e4689a958 24/d0/13/24d0131de5405a6a74ec1ad8434f3a79',earls:'a1/0c/4c/a10c4c164388efa092a7b13088882ad5 25/af/7f/25af7f493390b4923c5a25f33e81646c 5d/30/fc/5d30fc347b847e9bc6a59970f77cc03a',wolf:'3b/fb/7a/3bfb7abacb167d2edfff4e34d818191d e3/61/36/e36136ef043fdc0a3b66455194f0c4ba d7/5d/2a/d75d2a9e72eb32040031cc94c5a3b71d',backlot:'34/c2/1e/34c21e2a1cff837ddf4ebe735dde0a01 c2/23/e1/c223e1498b0f79139a6c057d886faea2 90/6e/a0/906ea09650dfa68b99e27475439ca627',behemoth:'7d/25/48/7d25486c944ff5ac9aed86f6633b8303 fd/45/b8/fd45b8b61526ab51801cc10dd95c6d39 2e/e7/7e/2ee77e17a557f9072fbec8f005f00321',farm:'1b/b5/dc/1bb5dc1d520e08b9950a6e1a7192d5de 21/4e/7c/214e7c79b2b8033480ba91fe3680dad9 b7/f5/38/b7f5383716b3cf8eda6cc2d21fa86172',union:'87/68/c3/8768c3529fb6d7f4b7fc271d753c1617 64/da/b0/64dab0a7e0da9810ca0e66d3b5c8350d 1f/14/b9/1f14b97651d49ea7ac283bf23307c18b',tommy:'1f/77/c6/1f77c6d6eba249de46c34770e6fa2c49 36/53/1a/36531a7b5417267b415e4884196f4c3f c5/8c/bb/c58cbbe39aeec69558a39799a443e37d',shoppers:'bb/b3/04/bbb3046b61597e63185f803a6f566e16 e3/8c/b5/e38cb57b86b88975c3eaff9d3f5501aa 42/f6/93/42f69352a0284dd707825073e3d9af6b',round:'ed/9a/80/ed9a80d4fddb4939d2dc50975057f114 22/84/f8/2284f84b8cc7177b3afb5a66945fe93e cc/32/ae/cc32ae0120579a77a790d77f5ebec705',cn360:'11/c9/a1/11c9a11b62f547c336501c5e3f94ed23 78/bc/4f/78bc4fa9dbf4d0fd5fd763ded26e875b a7/f0/e0/a7f0e06566efb31778779d8d5655ba8e',pond:'f6/34/14/f63414e85daf7052a3b3e47d9cbb7ce1 2a/8c/f1/2a8cf101dfb11ba745a81e6f6b570873 89/53/47/895347daa723b5ed0d0069d4d0898026',fort:'1c/a2/d3/1ca2d3ebee846d53c09d2170a04dbc4a e2/b3/41/e2b3410e2ff2337dce59f27623d6d446 f0/0d/bc/f00dbc5c832907b8a39dc6d205cdca16',skylon:'b1/7f/5d/b17f5dc6d75009abfef7396c5f1c3139 77/fc/d6/77fcd6b185d7cbb6b50868c57bd87bdb dd/66/69/dd666960c810752601019a65dacd3c57',bestbuy:'7e/16/28/7e1628ec9af846d655f0ec03977e6d53 22/88/51/228851293eed1cf6678da4dd528206bf b5/28/f4/b528f4c14553eb181c41f5f21e6f4e28',kost:'1c/fa/31/1cfa3146aeb5748b7af626327b8084ab 1c/8b/d5/1c8bd5b9c7314ce98637c6cb23e5ad28 95/95/83/95958358de78ae5cabf9b5a7bb07b122',parkhyatt:'53/62/f3/5362f3c1051cee2915ee5f65476b79be 84/b2/d8/84b2d86319a342c69d36135fe93d8819 b5/d2/06/b5d206812ea950be22ca5300955030c2',avis:'f7/6c/9c/f76c9cc99c4f4df8564b7c08627ec9cd e0/7d/8d/e07d8d43fc1d6a450833f60e5c8507a5 c9/b4/f5/c9b4f5a77c5052e1899f94dae2d3931d',ripleys:'fc/5b/76/fc5b7632fbc5f9517092edcd3d7f4743 61/31/d8/6131d8c6703ffb0ec54345136a4374df 43/76/d9/4376d9b592ae7368131e86c415bffa7a',wonder:'89/b8/6d/89b86d2fd636699dfe64b99d7c6164e2 05/56/8c/05568cde279b3ee7c062046caf76b6f2 bb/6d/c7/bb6dc703c940d31a4b3b27f45f919abb',tavora:'1f/49/f6/1f49f651678511a24d6cb9cdcebb6f0a 3b/e4/7d/3be47ddf3b5adb00d688890b20373189 cc/ee/8a/ccee8a8f3911c523dedc537878bfc9c5',rom:'27/67/4d/27674d517ba338be2f5d06bf483db9e1 70/d8/71/70d871f205c0d71aed9dcc8cdb6f044b 86/7d/6a/867d6a6e4c21bf3a2f6d1294fe1c4c90',wm:'a1/56/e0/a156e0adff2ce87f2b8a32268a94f184 c9/62/5e/c9625e2dc8f71cfd90e259b567b96aa5 75/92/93/7592938c94d4c3f6affaa76399c31e8b',coli:'8a/4f/2a/8a4f2aff25cc9f761f0ab88dc16a5c60 09/26/2e/09262e841a033dd3decf08e044d488e7',walmart:'9d/39/a6/9d39a623c0e7ccf5fc1964d6900df6db 35/c0/c4/35c0c4f00c92bf52c16f3ea77589dd28 50/b2/d0/50b2d0db0009ae45413945fcf9a71b86',tim:'58/fe/48/58fe485ec91505e1b01bb5b8d4230604 fc/e9/a4/fce9a472c163903c3d055dbaa45690bc 0d/39/b9/0d39b960492bc8ab89d9ea23d4d5ead0',dufferin:'fd/32/d2/fd32d21cd6267238c4949787d5859d24 4e/6c/c4/4e6cc408e9c04604f5ba8953b1f26580 91/33/2c/91332cd1d444af8bbf6064dfb76eaba4',kingjohn:'2f/b7/35/2fb735cd076e1439c4adb2cd488643ce e9/4f/c7/e94fc79421279ed273465203427a9ccd 1d/61/f0/1d61f00fc002c51b17037d9afa865030',squirrel:'d5/d6/18/d5d61840bcd52a8a64ba86e7348c8abe b0/d9/c7/b0d9c7c495fda8be3a7782287557000c 71/82/d2/7182d2d8ee03a69423dbd5180ea62a4b',whirl:'74/3d/e1/743de1e64eeba3edb5216f0f4abaf540 0c/20/ec/0c20ec9a7bdcc798f9130f310cbcaed3 bd/02/a7/bd02a79308f296aa76bc108cd2371a14',raccoon:'5a/f8/a0/5af8a0b7ac07b8af3e9b666053025c20 d4/4a/5e/d44a5eb4e7435ac90caf2873518bdc90 2f/bd/9b/2fbd9b025bfe6179425b50384dc454f6',mp:'c1/06/ff/c106ff81e493f1ba33502092d97d05ae fd/24/a9/fd24a925b4cba05ca697dee14cbf5dda 3f/bd/4c/3fbd4ca6e7ea91156650d08d20ac7114',improv:'dd/8f/21/dd8f2195ab2a3b945c7602999250b2e1 67/a2/33/67a2339e4561deff074e799253445e8f 93/bf/81/93bf81a3a636cfc8ef443b75449c8e59',york:'59/db/75/59db75905a13653a84be9552f77ef68d 1b/c9/f3/1bc9f36be232eacce29113145945f19a 37/5f/1c/375f1cedfca4e8b6e00d0d76d994aa3c',hansa:'25/57/36/2557363578fd29faa3fab191c65bb841 52/39/c3/5239c36121c459f6ae9bc5b4e35e8e1c e7/cd/22/e7cd228079371c7ab585efd5c67e1c20',cruise:'82/60/4b/82604b62d59823f5bb2510422484d9ea a2/58/ad/a258ad0ad3e7d92dc5458783e6f5da39 6a/b6/e4/6ab6e469e7a8686cb5c0a5c0420f9c8c',tube:'a4/54/a1/a454a1a673c83e3ee9393dd8f13af98e 87/1e/99/871e992b74c291c6e53bc97b11fd1fc4 6f/cf/d1/6fcfd10256e81b7285d774600efdd6e0',qpark:'5c/ce/b4/5cceb489368c3bda2de6cf3d2fe303c5 cf/36/a5/cf36a59a2f5436f74947f68cb3cc98cf cf/1e/3b/cf1e3b3dbdd7c82aae010c5948433b75',ilac:'25/81/14/2581145d1563d69a3177ec9b3f66a83f de/bf/74/debf7418a2c1aa96f43dec893e065a78 eb/ed/fb/ebedfbdb7b60d0f3bfa0919439d41037',cabbage:'1b/76/83/1b7683037aacdcb59404387a73ad395d 0b/9f/aa/0b9faa0beda61307b191e69c49242451 c4/64/8d/c4648d4206ea04ac53a0c7917fd93b0d',cedar:'5d/30/fc/5d30fc347b847e9bc6a59970f77cc03a 8b/b6/00/8bb600cb4331fd4149d55baf3c3ac11d ee/84/fb/ee84fb164e3ecb8b45e6a92bd31badc9',library:'59/0b/05/590b05c9b7e16ea696a2da71b3a7e843 aa/50/c9/aa50c9af84264b7a89fbaa7424d08dc2 fc/bc/46/fcbc46ecc02a7f23f02933f41b5acab7',vmills:'81/a4/80/81a4800d2194b9a61ffd6edfb7e106df d7/8e/67/d78e6757f9163ac065e7a12615e4e72d e3/b2/a6/e3b2a6ef9488da50d381b6898d31cc8d',winter:'f7/1b/78/f71b78bf38a1b66d1ab9f737c04734b0 ba/67/92/ba6792b13b30b6edc1a6c94e6c11414f 07/28/38/072838ba7e97d82f2c8a6e025b2112cb',jacket:'8a/9f/80/8a9f807a6e78748aca198eae4be8d7e5 8f/44/e8/8f44e87e6301a41d68258383e383a4eb 05/0d/e2/050de279a42b5bd0b6fe14b358b87ca0',baldwin:'8d/1a/c0/8d1ac02d9834b3b7eb9906b714272636 ac/3a/2c/ac3a2c5b4d816dbac30f7771650a2878 ca/9e/66/ca9e66049afee9ad0efe8c0945f6b9b2',marlies:'b3/52/95/b35295a9239278eed84e696223a6219b c8/47/61/c84761d157b6ec3d4c39fbd755c60762',midway:'68/ce/88/68ce88222478de60dd0b2ce03a8eee52 cb/8b/21/cb8b21450ce441c9b36466f53120969e 68/0e/d4/680ed4b17071ce335fe43561de11d9de',skywheel:'23/5d/03/235d0379c9ab79a0adce7db8ee7c9b2a 95/ab/c1/95abc16ecf1f235c1369c4a64ad26b49 31/72/4f/31724fe519df38f6847484c175f0e243',blue:'16/9d/b7/169db79be03c29db34d334ce0d60e816 06/ab/aa/06abaa7b4e913b2fde2ae97838645904 87/ea/38/87ea383accf9d3626ec1b601837d1c59',ferry:'9e/7c/07/9e7c074adcdeb449168e2c941e4eb649 4c/a3/2b/4ca32b185a795df0875160647e1bd79e a4/e5/e3/a4e5e31f04fb93ac0336bf13727eb057',casaloma:'27/8c/bb/278cbbebea8bea977c9b8c7a28ec048b 38/c3/86/38c386d6ff0a0bba4c9b26a04bfb9178 95/9d/ae/959dae2b2af5c76f06f68af8b89dc64a',nathan:'a9/39/e0/a939e0c31e98791227eaed96f61b386b 88/77/23/887723eb35e47afcc7cfe9fb86acd42b 68/44/3f/68443fc7d13a52b1c25b039616191e3d',outlets:'2c/b0/50/2cb050e47bb9e2ff81a3eac7e4b3a121 7a/77/89/7a7789d97fe86c977aa88fad61cd6648 85/38/f4/8538f4586c5c30cc640aa466c9d931fd',varsity:'55/29/1f/55291fddbc061c394f67b84bc430c6dd c4/4f/e9/c44fe9ea68f62da7d1914e38917b509d 50/08/51/5008511672147312083b6fed8bf41c6e',speedway:'0c/40/b5/0c40b56e026ea2fa85cf4a6b13f99b61 5b/2e/9d/5b2e9dff4756262a3180282a4d13b31d 99/89/09/99890925c6c4dd061333d3e6d4fd8b04',hp:'00/83/67/00836704c86a3c640c110d596f5d4736 9d/57/4b/9d574b07ec6129be14ead6bb06a95513 32/4e/8c/324e8c5e3c4f0837343304eaaf853812',clarence:'79/c3/1c/79c31c426a7f13e6331ae77f9f2319f8 ac/da/b5/acdab534aafa1b1829110707a456c6af 30/35/b0/3035b0903c14c642762e408169153179',hhof:'e3/31/25/e3312578658fb668d6c93eaba6eac38e d0/51/21/d05121baa26e1113752fe77615a50cad 6a/e2/8b/6ae28ba86a288a6887246bf61ab7e5d8',toast:'ff/7c/de/ff7cde84851a65691b535099a93c7d2d 16/e3/35/16e335baa57123d0dedd82e3f6b75f83 92/ab/21/92ab212627d190b2eeba5d7f8d450795',oakes:'db/82/16/db821667927b6d72a7bccea47d999554 0e/07/eb/0e07eb6e4c2fcdd490ee8ea8d9a8c956 49/53/f7/4953f7b476efdac7b70e49741d1d867d',sba:'4a/31/86/4a318644deee37d0df8a365599889246 da/4c/db/da4cdbe321ac881188065a7677479e34 16/bd/5c/16bd5cddd1425532ff0ab2ec11ce22b5',eaton:'f5/70/3f/f5703fcb0a4454e686df6c442042ec68 c2/36/ad/c236ad0eed600a010daf69a21df1e214 3d/43/f7/3d43f7d2706446005fc95b9f1bdf87d9',qvp:'e9/18/ee/e918ee0986ebbc087655ae9b3b8be98d f5/34/92/f534920d8adaf80c15f404e6530d018c d6/b6/30/d6b6308979b9bdeab2f1ac67cf6236c2',brick:'b0/f6/06/b0f6063971fa3518b7ae029bcf2ec70f 8f/1a/29/8f1a29b8945b1665b0d7535cefd0ab2f f4/dd/67/f4dd678aa6a030bfe964eecdb7c8d767',tr:'b9/57/78/b95778d8c92470ad0d864b519f99c4fd a0/c7/aa/a0c7aa88134369abb232e746dabbec7c 73/97/95/7397955602d1325cf0cda095160727d4',kelso:'82/4c/52/824c5237120a320817af0afa7fdd073b a4/83/36/a483367e093fc456674c6a7375a29712 13/2a/de/132ade69ae9e588748ce073fb5b91651',distillery:'2c/e5/94/2ce594f17f3de873243996f479979716 ae/9c/80/ae9c8050374ba6dd8376188d79cbc244 fd/4e/96/fd4e96a1c1fb041d18e11c0a256004bb',clifton:'eb/69/bb/eb69bbb311983f67606df4695c1c7eb0 0d/1d/1c/0d1d1c40a6b423f0017afa2f6678cceb 6f/a6/15/6fa615e433020d13de0cf12cdadd9fbd',hpzoo:'56/34/79/5634793f92c7a368664d3dd04256518b 32/89/29/328929ed582d8d75080e5652ca175f7b 48/d5/fe/48d5fe8b9c24759b26298b5e3d836d71',meetup:'d0/86/3b/d0863bb5cf5a18bc1013d8be65be59ce 9a/67/21/9a6721b248d14f164e8a2db35b777cec 6d/0b/be/6d0bbeb9919bb0d415215ec05dec1a84',rayban:'c1/9f/23/c19f23418b804a374fc74507b14e128c 9c/55/08/9c5508c4b68a962fbaf93e8610275017 fb/21/8a/fb218a63e1a9704e14753983dc368d10',journey:'49/9b/81/499b81b7f59b66dbb5b842103f779da8 48/e4/24/48e42485415f21ce6f912194abb53f56 88/5c/3a/885c3ab0b83b7299f7fe93da2e87eedd',tzoo:'64/ae/2d/64ae2dab03908c9a0d425ce457d93430 33/40/10/33401089a1da5781f382c315ac578438 4f/76/a6/4f76a6dda5dcae00863af7cd76872db6',uc:'a1/5a/70/a15a702c0abf65c12ecd5449b7fbbac0 4f/e9/98/4fe99880bf2ff64c11826ccd29199d41 ca/de/f6/cadef68e60c5e76bdaf7d37e23cb14d2',haunt:'bb/6d/c7/bb6dc703c940d31a4b3b27f45f919abb f4/10/bb/f410bb6de98ea59afbbd6b4295ad5a57 21/0b/27/210b27a385dfa91033d3f62856d10af0'};
+Object.assign(PH,{medieval:'c0/77/49/c07749f3eb788880b10f4e82ea45d677 45/ac/07/45ac07914ca88a1d6a76572513e96032 f5/6f/de/f56fde71bf62ea4fa6b6c557ea7e2b95',cne:'3d/98/52/3d98520224733a72f2a4edb0aeec6db4 91/a2/bc/91a2bc7a4c7e5cb2030687dd4304ed92 73/85/ec/7385ecb8c4ba2aca51622c459cadd2b1',biid:'f7/bd/f3/f7bdf321159fc6b4019379de401b3c33 d8/05/c9/d805c96454a926d0d28cd03a5d3cad52 86/22/a2/8622a2515987f17ab5364a974fd0a69b',ago:'7d/b5/05/7db5053ba8d5b6a14286145b61e52c78 9b/fe/6e/9bfe6e466695ce37b31a54ecc093bc95 82/f4/b6/82f4b6c65f3ff2eb5f378e09607ae49d',rogersc:'af/4c/9a/af4c9ab04d3a4558b5f48af3830c935b 2e/63/f8/2e63f8b0f119fc143c283d84a7cf2ca2 44/22/e2/4422e23b96466e4116a88a9fa3c03368',och:'e9/a3/22/e9a3228914610868149c666cbb1d4d54 5e/22/68/5e2268d46d3edf1d00c3ffbdc8693d67 d0/35/ef/d035efa956d6d64f752834ea6ddec9df',good:'a3/0a/1f/a30a1fc3b6a5e662387708c41da7a894 11/a8/e3/11a8e3b6071b76029a2a9e4cfe1a53c0 c2/0f/b8/c20fb861a5bba43561213e44be6182f2',arcadia:'35/c5/2c/35c52cff4c895a156d37dcb916366795 21/77/07/217707c203a56e98bf83d1b7ab7d78d9 e7/64/d9/e764d96d76475052d787143d1dc3782e',trin:'3a/ea/f3/3aeaf3602acbb41be5c5c468fdfc899a ae/a5/c5/aea5c5520d0f804ee2e92b7b2add45b5 91/39/83/913983c73dcd8eab505d4c4682c42995',bluffs:'68/be/12/68be125a2ddb3f2eb134225aa49b663d dc/2a/04/dc2a04b8eb85d7a9d88dc9d14fb5c60d a8/c1/9e/a8c19ec131e78784ab4c48686bd04dca',scenic:'cf/fc/35/cffc35cf96359ecd141f5db383de58c9 c1/1b/28/c11b28beea8964b3bf29a4a6b7dc9e04 24/d0/13/24d0131de5405a6a74ec1ad8434f3a79',earlb:'9a/62/0f/9a620f8680a5007ec2e784d9b89c1b89 39/9f/59/399f59978eb56a7ecfd3416b231b3545 30/99/4c/30994c970dc2609bc1ba0138a31995c2',gotour:'c0/54/19/c05419fed51c2de9a3caebf9d9cbca5a fd/4e/96/fd4e96a1c1fb041d18e11c0a256004bb',balz:'78/62/82/7862822c03f0bf62461b24182a16a88f 1d/69/a6/1d69a618b1549229cfeb87c995bd77b1 7d/85/26/7d85264532b4159ff37252808bddd3f8',aw:'d5/8a/ac/d58aac6ef758f1a9b8798b6c310ef59e 45/29/f8/4529f8f5eadc85078ac7430d13278027 82/d8/f6/82d8f6bbe87c1621a59374ec9cfa5ed2',brock:'0f/37/2d/0f372da23123f0bed2fe593783caf75b db/db/bc/dbdbbc44b4caf3e10457abf649c99461 35/b9/e6/35b9e64142b758fa56cd1ba36fd91377',activate:'b7/ce/4f/b7ce4ffb993dc5f922eaf9987fdcade5 a5/21/40/a52140dbc94011e94883cc534a084274 de/4a/87/de4a87406a2d7350996f37baff76e371',box:'69/32/61/693261d5b6cb19940250b4934e8152cf 92/fd/e9/92fde90e7a0a2ff73b9e2d49d3a72712 6d/45/2c/6d452c5a6b0e58ed54e96f9ddfe368c1',winners:'9f/d7/f7/9fd7f7cf349089cbff49a7ecbfbecea3 c6/36/53/c636532b02078962a2c889e8810679e6 ba/d2/4d/bad24d125a3ae86a01be129e61bbb5f5',marsh:'78/98/30/789830597f26908516630de69a7ff41b 7e/0b/54/7e0b544adac2683658e85264bf452c94 7b/7f/43/7b7f43250ba1f62c0b8d4ec0592a5f88',vv:'4e/21/29/4e2129ebd60750a2eb895b3d8233124c 2a/41/11/2a4111b16db7ff9a4636f1639bc1cf1b 30/b8/63/30b8631801883cb95c26347a658dc4fe',uniqlo:'f1/67/81/f167816cb1c438c4d27b02aa2ca1ece1 c7/0e/47/c70e4772f8df360c8783da70bc7ddb9b 89/19/0e/89190edffaa8ad0140d65989bd37666b',ordinary:'76/c5/1e/76c51ed2aa07e562a01795b135be9a1c 0a/14/e0/0a14e03b28f7f685dfae3ab3d1746eb2 6f/18/f7/6f18f7f65c2765606deaaef1694ee763',bmv:'8b/f0/b1/8bf0b1774915f24becbdec610e29cd1c e3/02/29/e30229298a23ff28cfff8fa1a7fd5c33 48/ee/23/48ee235ac616a59167dccc1cbc2b9b29',canout:'68/7d/0c/687d0cbf56dd83a4dde3c75e1f5502a0 62/72/bb/6272bbbcb7c109efb9c887e252b56e76 fc/1f/39/fc1f3935255b5efc2d8882aec1a83cc1',pat:'e8/48/02/e848027faf13d8bbe8c96f9ea720cd69 6e/67/e3/6e67e3518677885f8c01bb6bd18a18c6 23/24/88/232488471f3b3be661af7d5c4f3fedd5',aw2:'39/5e/cb/395ecbb429a7d4f016d536f82885438b 98/14/e0/9814e0545dd87662948a681c68aee0c1 ef/58/6a/ef586a416ea8e395a50b0b6d3cb5c05f',oxford:'36/c5/f4/36c5f4a6c41f12db3bbe99eb55433626 25/57/36/2557363578fd29faa3fab191c65bb841 1b/4f/c6/1b4fc6b9f7209148242770d5d42efc3c',gbc:'23/ee/94/23ee948a699a1849c7809de5f5784e67 dd/67/39/dd67394d650cdcc153f943e188f4981b d4/4c/b4/d44cb430698b830b92bf53da6c95e4ff'});
+
+
+// nome da parada -> chave de foto
+const PM=[[/T[aá]vora/,'tavora'],[/Samba/,'samba'],[/WOLF/,'wolf'],[/Earlscourt|Prospect/,'earls'],[/Sabor/,'sabor'],[/Shoppers/,'shoppers'],[/Best Buy/,'bestbuy'],[/Walmart|Mercado grande/,'walmart'],[/Biblioteca/,'library'],[/Avis/,'avis'],[/Vaughan Mills/,'vmills'],[/Haunt/,'haunt'],[/Wonder Mountain/,'wm'],[/Behemoth/,'behemoth'],[/Backlot/,'backlot'],[/Yukon/,'yukon'],[/Leviathan/,'leviathan'],[/Wonderland/,'wonder'],[/Union/,'union'],[/CN Tower \+|360/,'cn360'],[/Escadaria|Rooftop do v/,'cn'],[/Ripley/,'ripleys'],[/Roundhouse/,'round'],[/Bonde vermelho/,'kingjohn'],[/K[OŌ]ST/,'kost'],[/Clarence/,'clarence'],[/Fort York|Garrison/,'fort'],[/Letreiro|Nathan/,'nathan'],[/Yonge-Dundas/,'yd'],[/balsa/,'ferry'],[/Tim Hortons/,'tim'],[/Hockey Hall/,'hhof'],[/Marlies no Coliseum/,'coli'],[/Marlies/,'marlies'],[/Maple Leafs|Camisa/,'sba'],[/Varsity/,'varsity'],[/Table Rock/,'tr'],[/Journey/,'journey'],[/Queen Victoria/,'qvp'],[/Oakes/,'oakes'],[/Cruises/,'cruise'],[/Skylon/,'skylon'],[/Clifton/,'clifton'],[/Midway/,'midway'],[/Speedway/,'speedway'],[/SkyWheel/,'skywheel'],[/Dufferin/,'dufferin'],[/Whirlpool|Desvio/,'whirl'],[/Filmes/,'baldwin'],[/Casa Loma/,'casaloma'],[/Front Campus|University of Toronto|UofT/,'uc'],[/Queen's Park \(/,'qpark'],[/Queen's Park e/,'squirrel'],[/ROM/,'rom'],[/Rooftop em Yorkville/,'parkhyatt'],[/Yorkville/,'york'],[/Riverdale Farm/,'farm'],[/Cabbagetown/,'cabbage'],[/Riverdale Park/,'rpark'],[/Distillery/,'distillery'],[/Tommy/,'tommy'],[/High Park Zoo/,'hpzoo'],[/Grenadier/,'pond'],[/Toronto Zoo/,'tzoo'],[/Guaxinim/,'raccoon'],[/High Park/,'hp'],[/Cedarvale/,'cedar'],[/Mount Pleasant/,'mp'],[/Brick Works/,'brick'],[/Tubing|Skibunda/,'tube'],[/Kelso|Trenzinho/,'kelso'],[/Blue Mountain/,'blue'],[/Eventos/,'winter'],[/Eaton/,'eaton'],[/Outlets/,'outlets'],[/Casaco/,'jacket'],[/Meta/,'rayban'],[/ILAC/,'ilac'],[/Hansa/,'hansa'],[/Toastmasters/,'toast'],[/Improviso/,'improv'],[/Meetup/,'meetup']];
+function photoFor(s){const n=s.n;if(s.pk&&PH[s.pk])return PH[s.pk].split(' ').map(h=>'https://i.pinimg.com/736x/'+h+'.jpg');for(const [re,k] of PM){if(re.test(n)&&PH[k])return PH[k].split(' ').map(h=>'https://i.pinimg.com/736x/'+h+'.jpg');}return null;}
+
+// ---------- MAPA REAL (Leaflet + tiles Esri, sem chave) ----------
+const maps={};
+function esc2(s){return String(s).replace(/<[^>]+>/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+function initMap(r){
+ const el=document.getElementById('lm-'+r.id),mm=document.getElementById('mm-'+r.id);
+ if(typeof L==='undefined'){el.style.display='none';mm.style.display='block';mm.textContent='O mapa real precisa de internet. Use os botões 🧭 de rota acima.';return;}
+ const m=L.map(el,{scrollWheelZoom:false}).setView(HOME.ll,13);let err=0;
+ const esri=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri'}).addTo(m);
+ esri.on('tileerror',()=>{if(++err===5){m.removeLayer(esri);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(m);}});
+ L.control.scale({imperial:false}).addTo(m);
+ const C=L.control({position:'topright'});C.onAdd=()=>{const d=L.DomUtil.create('div','compass');d.innerHTML='N ↑<br><span style="font-weight:400">O ← · → L<br>S ↓</span>';return d;};C.addTo(m);
+ const mk=(ll,txt,bg,pop)=>L.marker(ll,{icon:L.divIcon({html:'<div style="background:'+bg+';color:#fff;border-radius:50%;min-width:28px;height:28px;padding:0 4px;display:flex;align-items:center;justify-content:center;font:700 13px system-ui;border:2px solid #fff;box-shadow:0 1px 4px #0006">'+txt+'</div>',className:'',iconSize:[28,28],iconAnchor:[14,14]})}).addTo(m).bindPopup(pop);
+ const pts=[HOME.ll],line=[HOME.ll];
+ mk(HOME.ll,'🏠','#14213d','<b>Airbnb</b><br>79 Ford St');
+ r.stops.forEach(s=>{if(!s.ll||s.nomap)return;pts.push(s.ll);if(!s.opt&&!r.noLine)line.push(s.ll);
+  mk(s.ll,s.num,s.opt?'#6b7280':'#c8102e','<b>'+s.num+'. '+esc2(s.n)+'</b><br>'+esc2(s.h));});
+ if(!r.noLine)L.polyline(line,{color:'#c8102e',weight:4,opacity:.85,dashArray:'8 8'}).addTo(m);
+ m.fitBounds(pts,{padding:[30,30]});maps[r.id]=m;
+}
+
+document.addEventListener('click',e=>{const b=e.target.closest('.tabs button');if(!b)return;const id=b.dataset.r;b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+ const real=b.dataset.t==='real';document.getElementById('lm-'+id).style.display=real?'block':'none';document.getElementById('svg-'+id).style.display=real?'none':'block';
+ if(real&&maps[id])setTimeout(()=>maps[id].invalidateSize(),50);});
+
+// ---------- CALENDÁRIO INTELIGENTE (clima + rotas + eventos) ----------
+const PLAN={
+31:{r:'bairro',t:'Chegada: bairro, mercado, jantar',fix:1,ev:['Voo chega 30/out; check-in 31/out','Relógio volta 1h na madrugada de domingo']},
+1:{r:'wonder',t:"Canada's Wonderland (Halloween Haunt)",fix:1,ev:['Último dia do Haunt (inadiável)','Retirar o carro no Avis às 9h (abre 9h às 14h dom)']},
+2:{w:1,t:'Trabalho. Devolver o carro (Avis a partir de 8h)'},
+3:{w:1,t:'Trabalho',b:'hoquei',ev:['🏒 Leafs vs Utah 19h (opcional, ingresso ~C$110 a 150 com taxas)']},
+4:{w:1,t:'Trabalho'},5:{w:1,t:'Trabalho'},6:{w:1,t:'Trabalho',ev:['Royal Winter Fair começa (Exhibition Place, 6 a 15/nov)']},
+7:{r:'centro',t:'Centro: CN Tower, aquário, letreiro',b:'salvos1',ev:['🏒 U of T Varsity Blues 16h (opcional, barato)','Royal Winter Fair (Exhibition Place)','Niágara: nada ainda (sem festival e sem fogos)']},
+8:{r:'leste',t:'Riverdale, picnic e Distillery',b:'salvos1',ev:['🏒 Leafs vs New Jersey 19h (opcional)','Distillery Winter Village ainda não abriu']},
+9:{w:1,t:'Trabalho'},10:{w:1,t:'Trabalho'},11:{w:1,t:'Trabalho'},
+12:{w:1,t:'Trabalho',ev:['Distillery Winter Village abre (árvore acesa 18h)']},
+13:{w:1,t:'Trabalho. Retirar carro na Avis (sex 8h às 18h)',ev:['Retirar o carro para Niágara']},
+14:{r:'niagara',t:'Niágara + Festival of Lights',b:'midtown',ev:['✨ Festival of Lights abre (17h à meia-noite)','🎆 Fogos 20h (sextas e sábados) ⚠️','Royal Winter Fair continua']},
+15:{r:'midtown',t:'Casa Loma, ROM, Queen\'s Park, Yorkville',ev:['Último dia da Royal Winter Fair','Chuva: indoor (Casa Loma e ROM)']},
+16:{w:1,t:'Trabalho'},17:{w:1,t:'Trabalho'},18:{w:1,t:'Trabalho'},19:{w:1,t:'Trabalho'},20:{w:1,t:'Trabalho'},
+21:{r:'hoquei',t:'Marlies 13:30 (Scotiabank Arena)',b:'salvos1',ev:['🏒 Marlies vs Chicago Wolves 13:30 (~C$20 a 45)','Chuva: dia indoor perfeito (AGO, Arcadia Earth)']},
+22:{r:'salvos1',t:'Dia indoor + Santa Claus Parade ⚠️',ev:['🎅 Santa Claus Parade ⚠️ (data a confirmar)','Chuva: AGO, Arcadia Earth, Medieval Times']},
+23:{w:1,t:'Trabalho. Inglês à noite',b:'ingles',ev:['🗣️ MidTown Toastmasters 18:45 (grátis, St Clair W)','Primeiro dia abaixo de zero: -3°']},
+24:{w:1,t:'Trabalho'},25:{w:1,t:'Trabalho'},26:{w:1,t:'Trabalho'},
+27:{r:'compras',t:'Black Friday: tablet, MAC, roupas',b:'salvos2',ev:['🛍️ Black Friday (sexta)','Dia mais ensolarado da semana (7°/-1°)']},
+28:{r:'compras',t:'Outlets + Marlies 16h ou Cavalcade ⚠️',b:'salvos2',ev:['🏬 Premium Outlets (carro/shuttle)','🏒 Marlies 16h no Coliseum','✨ Cavalcade of Lights ⚠️ 17h a 22h']},
+29:{r:'animais',t:'High Park: animais e carvalhos',b:'salvos1',ev:['Último domingo: devolver carro, fazer malas']},
+30:{t:'✈️ Voo 07:50: sair ~04:00',ev:['Cyber Monday (online)']}
+};
+const WLBL=(mx,mn,sk)=>{const t=[];if(mn<=0)t.push('🧤 gorro, luva e casaco de inverno');else if(mn<=4)t.push('🧥 casaco forte, gorro e luvas');else t.push('🧥 casaco médio em camadas');if(sk==='rain')t.push('☔ guarda-chuva e bota');return t.join(' · ');};
+function buildCal(){
+ const c=document.getElementById('cal');c.innerHTML='';
+ ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'].forEach(h=>c.insertAdjacentHTML('beforeend','<div class="wh">'+h+'</div>'));
+ for(let i=0;i<6;i++)c.insertAdjacentHTML('beforeend','<div class="d off"></div>');
+ const R_=id=>R.find(r=>r.id===id);
+ const chip=(p)=>{const ic=p.r?R_(p.r).ico:(p.w?'💻':'✈️');return '<span class="pi">'+ic+'</span><span class="p">'+p.t+'</span>';};
+ const lbl=k=>k===31?'31 out':String(k);
+ const keys=[31].concat(Array.from({length:30},(_,i)=>i+1));
+ keys.forEach(k=>{const w=W[k],p=PLAN[k]||{t:''};const rt=p.r&&R_(p.r);
+  c.insertAdjacentHTML('beforeend','<div class="d '+w[1]+(p.fix?' fix':'')+(p.w?' work':'')+'" data-k="'+k+'"><b>'+lbl(k)+'</b><span class="e">'+w[0]+'</span><span class="t">'+w[2]+'° / '+w[3]+'°</span>'+chip(p)+((p.ev&&p.ev.length)?'<span class="ev">● '+p.ev.length+'</span>':'')+'</div>');});
+ const det=document.getElementById('dayd');
+ const jump=(id,lab,cls)=>{const r=R_(id);return '<button class="jump '+(cls||'')+'" data-go="'+id+'">'+r.ico+' '+lab+': '+r.t.replace('Rota ','').replace('Salvos do Maps · ','Salvos: ')+' →</button>';};
+ const dow=k=>{const d=new Date(2026,k===31?9:10,k===31?31:k);return ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d.getDay()];};
+ const sel=k=>{const w=W[k],p=PLAN[k]||{t:''};
+  c.querySelectorAll('.d[data-k]').forEach(x=>x.classList.toggle('sel',+x.dataset.k===k));
+  det.innerHTML='<div class="box dd2"><h3>'+dow(k)+', '+(k===31?'31 de outubro':k+' de novembro')+' · '+w[0]+' '+w[2]+'° / '+w[3]+'°</h3>'
+   +'<p>'+WLBL(w[2],w[3],w[1])+'</p>'
+   +'<p><b>Plano:</b> '+p.t+(p.fix?' <span class="fixtag">FIXO</span>':'')+'</p>'
+   +(p.r?'<p>'+jump(p.r,'Abrir rota')+'</p>':'')
+   +(p.b?'<p><small>Plano B (chuva, frio ou cansaço):</small><br>'+jump(p.b,'Alternativa','alt')+'</p>':'')
+   +(p.w?'<p><small>Dia de trabalho: livre para fim de tarde perto de casa (Rota Bairro, High Park) ou inglês à noite.</small></p>':'')
+   +((p.ev&&p.ev.length)?'<p><b>Eventos e avisos</b></p><ul>'+p.ev.map(e=>'<li>'+e+'</li>').join('')+'</ul>':'')
+   +'</div>';};
+ c.addEventListener('click',e=>{const d=e.target.closest('.d[data-k]');if(d)sel(+d.dataset.k);});
+ det.addEventListener('click',e=>{const b=e.target.closest('button[data-go]');if(b)window.__goPane(b.dataset.go);});
+ sel(31);
+}
+buildCal();
+
+// ---------- NAVEGAÇÃO POR BOTÕES (uma seção por vez) ----------
+(function(){
+ const nav=document.getElementById('nav');const lab=r=>r.ico+' '+r.t.replace('Rota ','').replace('Salvos do Maps · ','').split(' · ')[0];
+ const main=R.filter(r=>!/^salvos/.test(r.id)),salv=R.filter(r=>/^salvos/.test(r.id));
+ const btn=(id,t)=>'<button data-p="'+id+'">'+t+'</button>';
+ nav.innerHTML='<div class="gl">Geral</div>'+btn('clima','☁️ Clima')+'<div class="gl">Rotas</div>'+main.map(r=>btn(r.id,lab(r))).join('')+'<div class="gl">⭐ Salvos do seu Maps</div>'+salv.map(r=>btn(r.id,lab(r))).join('');
+ const fab=document.createElement('button');fab.id='menuFab';fab.textContent='☰ Menu';fab.onclick=()=>window.scrollTo({top:0,behavior:'smooth'});document.body.appendChild(fab);
+ function show(id){document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+id));nav.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.p===id));
+  const r=R.find(x=>x.id===id);if(r){if(!maps[id])initMap(r);else setTimeout(()=>maps[id].invalidateSize(),60);}
+  if(id!==window.__first){const pe=document.getElementById('p-'+id);if(pe)window.scrollTo({top:pe.getBoundingClientRect().top+window.pageYOffset-8});}try{history.replaceState(null,'','#'+id);}catch(e){}}
+ nav.addEventListener('click',e=>{const b=e.target.closest('button[data-p]');if(b)show(b.dataset.p);});window.__goPane=show;
+ const first=(location.hash||'').slice(1);const f0=['clima'].concat(R.map(r=>r.id)).indexOf(first)>-1?first:'clima';window.__first=f0;show(f0);window.__first=null;
+})();
+
+// ---------- PHOTOS ----------
+const cache={};
+function tryImgs(ph,list){if(!list.length)return;const i=new Image();i.referrerPolicy='no-referrer';i.onload=()=>{ph.appendChild(i);ph.classList.add('hasimg');const f=ph.querySelector('.fac');if(f&&list[0].indexOf('streetviewpixels')>-1)f.style.display='block';};i.onerror=()=>tryImgs(ph,list.slice(1));i.src=list[0];}
+function wikiImg(ph,wk){const f=cache[wk]||(cache[wk]=fetch('https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(wk.replace(/ /g,'_'))).then(r=>r.ok?r.json():null).catch(()=>null));f.then(j=>{if(j&&j.thumbnail&&j.thumbnail.source)tryImgs(ph,[j.thumbnail.source.replace(/\/\d+px-/,'/640px-')]);});}
+R.forEach(r=>r.stops.forEach(s=>{const tim=/^Tim Hortons/.test(s.n);if(s.sv){s.pics=[s.sv];if(!tim)s.pics=s.pics.concat(s.img?[s.img]:[]).concat(photoFor(s)||[]);}else if(tim){s.pics=s.ph?[s.ph]:[];}else{s.pics=(s.ph?[s.ph]:[]).concat(s.img?[s.img]:[]).concat(photoFor(s)||[]);}}));
+document.querySelectorAll('.ph').forEach(ph=>{const sid=ph.dataset.sid.split('|');const s=R[+sid[0]].stops[+sid[1]];if(s.pics.length)tryImgs(ph,s.pics);else if(s.wiki)wikiImg(ph,s.wiki);});
+</script>
+</body>
+</html>
